@@ -1,0 +1,47 @@
+{
+  "name": "brandys-desired-apartment-finder",
+  "version": "1.0.0",
+  "description": "West Los Angeles luxury apartment search with automated search capabilities and intelligent ranking",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx http-server . -p 3000 -c-1",
+    "build": "echo 'No build process needed for static site'",
+    "deploy": "gh-pages -d .",
+    "test": "echo 'Tests will be added in future version'",
+    "serve": "python3 -m http.server 8000 || python -m SimpleHTTPServer 8000"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BNYEDAGAWD/Brandy-s-Desired-Apartment.git"
+  },
+  "keywords": [
+    "apartment",
+    "search",
+    "west-los-angeles",
+    "real-estate",
+    "rental",
+    "luxury",
+    "github-pages",
+    "javascript",
+    "responsive"
+  ],
+  "author": "Brandy's Apartment Search Team",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/BNYEDAGAWD/Brandy-s-Desired-Apartment/issues"
+  },
+  "homepage": "https://bnyedagawd.github.io/Brandy-s-Desired-Apartment/",
+  "devDependencies": {
+    "gh-pages": "^6.0.0",
+    "http-server": "^14.1.1"
+  },
+  "dependencies": {},
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
+}

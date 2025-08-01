@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brandy's Desired Apartment Finder</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1 class="header-title">
+                <i class="fas fa-home"></i>
+                Brandy's Desired Apartment Finder
+            </h1>
+            <p class="header-subtitle">West Los Angeles Luxury Apartment Search</p>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <!-- Search Section -->
+            <section class="search-section">
+                <div class="search-card">
+                    <h2>Find Your Perfect Apartment</h2>
+                    <p class="search-description">
+                        Searching for 2-bedroom apartments in West LA with luxury amenities
+                        <br>Budget: $4,400 - $5,200/month
+                    </p>
+                    
+                    <div class="search-criteria">
+                        <div class="criteria-grid">
+                            <div class="criteria-item">
+                                <i class="fas fa-bed"></i>
+                                <span>2 Bedrooms</span>
+                            </div>
+                            <div class="criteria-item">
+                                <i class="fas fa-bath"></i>
+                                <span>1.5-2 Bathrooms</span>
+                            </div>
+                            <div class="criteria-item">
+                                <i class="fas fa-building"></i>
+                                <span>Above Ground Floor</span>
+                            </div>
+                            <div class="criteria-item">
+                                <i class="fas fa-wind"></i>
+                                <span>A/C + Laundry</span>
+                            </div>
+                            <div class="criteria-item">
+                                <i class="fas fa-tree"></i>
+                                <span>Outdoor Space</span>
+                            </div>
+                            <div class="criteria-item">
+                                <i class="fas fa-sparkles"></i>
+                                <span>Recently Renovated</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button id="searchBtn" class="search-btn">
+                        <i class="fas fa-search"></i>
+                        Start Apartment Search
+                    </button>
+
+                    <div id="loadingIndicator" class="loading-indicator" style="display: none;">
+                        <div class="spinner"></div>
+                        <p>Searching apartments across West LA...</p>
+                        <div class="progress-steps">
+                            <div class="step" id="step1">Scanning Mar Vista (90066)</div>
+                            <div class="step" id="step2">Checking Culver City (90230, 90232)</div>
+                            <div class="step" id="step3">Exploring Palms (90034)</div>
+                            <div class="step" id="step4">Analyzing and scoring results</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Filter Panel -->
+            <section id="filterPanel" class="filter-panel" style="display: none;">
+                <div class="filter-header">
+                    <h3><i class="fas fa-filter"></i> Refine Results</h3>
+                    <button id="toggleFilters" class="toggle-btn">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                </div>
+                <div class="filter-content">
+                    <div class="filter-group">
+                        <label>Sort by:</label>
+                        <select id="sortBy">
+                            <option value="score">Best Match</option>
+                            <option value="price-low">Price: Low to High</option>
+                            <option value="price-high">Price: High to Low</option>
+                            <option value="newest">Newest Listings</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Min Score:</label>
+                        <input type="range" id="minScore" min="0" max="100" value="60">
+                        <span id="minScoreValue">60</span>
+                    </div>
+                    <div class="filter-group">
+                        <label>Show only:</label>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" id="recentOnly"> Recent listings (past week)</label>
+                            <label><input type="checkbox" id="renovatedOnly"> Recently renovated</label>
+                            <label><input type="checkbox" id="premiumOnly"> Premium amenities</label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section id="resultsSection" class="results-section" style="display: none;">
+                <div class="results-header">
+                    <h2 id="resultsTitle">Search Results</h2>
+                    <div class="results-stats">
+                        <span id="resultsCount">0 apartments found</span>
+                        <button id="exportBtn" class="export-btn">
+                            <i class="fas fa-download"></i>
+                            Export Results
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Recent Listings Highlight -->
+                <div id="recentListings" class="recent-listings" style="display: none;">
+                    <h3><i class="fas fa-clock"></i> New This Week</h3>
+                    <div id="recentResults" class="results-grid recent-grid"></div>
+                </div>
+
+                <!-- All Results -->
+                <div class="all-results">
+                    <h3 id="allResultsTitle">All Matching Apartments</h3>
+                    <div id="resultsGrid" class="results-grid"></div>
+                </div>
+
+                <!-- No Results Message -->
+                <div id="noResults" class="no-results" style="display: none;">
+                    <i class="fas fa-search"></i>
+                    <h3>No apartments found</h3>
+                    <p>Try adjusting your search criteria or check back later for new listings.</p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Apartment Details Modal -->
+    <div id="apartmentModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Apartment Details</h2>
+                <button class="modal-close" id="closeModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Dynamic content will be inserted here -->
+            </div>
+            <div class="modal-footer">
+                <button id="bookmarkBtn" class="bookmark-btn">
+                    <i class="fas fa-bookmark"></i>
+                    Bookmark
+                </button>
+                <button id="contactBtn" class="contact-btn">
+                    <i class="fas fa-phone"></i>
+                    Contact
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="js/app.js"></script>
+    <script src="js/search-engine.js"></script>
+    <script src="js/scoring.js"></script>
+    <script src="js/ui-components.js"></script>
+    <script src="api/claude-integration.js"></script>
+</body>
+</html>
