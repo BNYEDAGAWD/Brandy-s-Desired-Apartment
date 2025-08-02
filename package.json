@@ -1,7 +1,7 @@
 {
   "name": "brandys-desired-apartment-finder",
   "version": "2.0.0",
-  "description": "West Los Angeles luxury apartment search with automated search capabilities and intelligent ranking",
+  "description": "Advanced West Los Angeles apartment search with sophisticated link verification, intelligent processing, and adaptive browser restriction handling",
   "main": "index.html",
   "type": "module",
   "scripts": {
@@ -26,8 +26,9 @@
     "luxury",
     "github-pages",
     "javascript",
-    "typescript",
-    "progressive-web-app",
+    "advanced-verification",
+    "link-processing",
+    "ai-agent",
     "responsive",
     "vite",
     "modern"

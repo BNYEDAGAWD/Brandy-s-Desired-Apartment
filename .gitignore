@@ -13,7 +13,8 @@ node_modules/
 __pycache__/
 *.pyc
 
-# Build outputs (keep dist/ for GitHub Pages)
+# Build outputs
+dist/
 .vite/
 
 # IDE
