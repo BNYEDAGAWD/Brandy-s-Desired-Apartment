@@ -837,6 +837,138 @@ body {
     border-left-color: var(--warning-color);
 }
 
+/* Enhanced Link Management Styles */
+.listing-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.view-listing-btn.primary {
+    background: var(--secondary-color);
+    color: white;
+    border: 2px solid var(--secondary-color);
+}
+
+.view-listing-btn.backup {
+    background: var(--light-bg);
+    color: var(--text-dark);
+    border: 2px solid var(--border-color);
+    font-size: 0.85rem;
+    padding: 0.5rem 1rem;
+}
+
+.view-listing-btn.backup:hover {
+    background: var(--border-color);
+    border-color: var(--secondary-color);
+    color: var(--secondary-color);
+}
+
+.show-backups-btn {
+    background: none;
+    border: 1px solid var(--border-color);
+    color: var(--text-light);
+    padding: 0.4rem 0.8rem;
+    border-radius: var(--border-radius);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: var(--transition);
+    margin-top: 0.3rem;
+}
+
+.show-backups-btn:hover {
+    border-color: var(--secondary-color);
+    color: var(--secondary-color);
+}
+
+.backup-links {
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background: var(--light-bg);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+}
+
+/* Modal Backup Options */
+.backup-options {
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    background: #f8f9ff;
+    border-radius: var(--border-radius);
+    border: 2px solid #e3e8ff;
+}
+
+.backup-options h5 {
+    color: var(--secondary-color);
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+}
+
+.backup-options h5 i {
+    margin-right: 0.5rem;
+}
+
+.backup-info {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    margin-bottom: 1rem;
+}
+
+.backup-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.modal-view-listing-btn.backup {
+    background: linear-gradient(135deg, #6c757d, #5a6268);
+    color: white;
+    font-size: 0.95rem;
+    padding: 0.8rem 1.5rem;
+}
+
+.modal-view-listing-btn.backup:hover {
+    background: linear-gradient(135deg, #5a6268, #495057);
+}
+
+/* Link Health Status Indicators */
+.url-status-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-left: 0.5rem;
+}
+
+.url-status-indicator.healthy {
+    background-color: var(--success-color);
+}
+
+.url-status-indicator.warning {
+    background-color: var(--warning-color);
+}
+
+.url-status-indicator.error {
+    background-color: var(--accent-color);
+}
+
+/* Dead Link Warning */
+.dead-link-warning {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: var(--border-radius);
+    padding: 0.75rem;
+    margin: 0.5rem 0;
+    font-size: 0.85rem;
+    color: #856404;
+}
+
+.dead-link-warning i {
+    color: var(--warning-color);
+    margin-right: 0.5rem;
+}
+
 /* Utility Classes */
 .text-center { text-align: center; }
 .text-left { text-align: left; }
@@ -861,4 +993,254 @@ body {
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+/* Enhanced Link Health Monitoring Styles */
+.link-health-indicator {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.8rem;
+    padding: 2px 6px;
+    border-radius: 12px;
+    cursor: help;
+}
+
+.link-health-indicator.healthy {
+    color: #27ae60;
+    background-color: rgba(39, 174, 96, 0.1);
+}
+
+.link-health-indicator.warning {
+    color: #f39c12;
+    background-color: rgba(243, 156, 18, 0.1);
+}
+
+.link-health-indicator.error {
+    color: #e74c3c;
+    background-color: rgba(231, 76, 60, 0.1);
+}
+
+.health-tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 6px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    z-index: 1000;
+}
+
+.link-health-indicator:hover .health-tooltip {
+    opacity: 1;
+}
+
+/* Enhanced Button Styles */
+.view-listing-btn.warning {
+    background-color: #f39c12;
+    border-color: #e67e22;
+}
+
+.view-listing-btn.warning:hover {
+    background-color: #e67e22;
+}
+
+.view-listing-btn.backup.search {
+    background-color: #3498db;
+    border-color: #2980b9;
+}
+
+.view-listing-btn.backup.listing {
+    background-color: #9b59b6;
+    border-color: #8e44ad;
+}
+
+.view-listing-btn.backup.search:hover {
+    background-color: #2980b9;
+}
+
+.view-listing-btn.backup.listing:hover {
+    background-color: #8e44ad;
+}
+
+/* Backup Links Container */
+.backup-links {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+    padding: 10px;
+    background-color: rgba(52, 152, 219, 0.05);
+    border-radius: 6px;
+    border-left: 3px solid #3498db;
+}
+
+.show-backups-btn {
+    background: none;
+    border: 1px solid #bdc3c7;
+    color: #7f8c8d;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 6px;
+    font-size: 0.8rem;
+}
+
+.show-backups-btn:hover {
+    border-color: #95a5a6;
+    color: #2c3e50;
+}
+
+.show-backups-btn.expanded {
+    background-color: #ecf0f1;
+    border-color: #95a5a6;
+}
+
+/* Listing Info Section */
+.listing-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #ecf0f1;
+}
+
+.listing-source {
+    font-size: 0.8rem;
+    color: #7f8c8d;
+}
+
+/* Modal Health Status */
+.health-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+    border-radius: 6px;
+    margin: 10px 0;
+    font-size: 0.9rem;
+}
+
+.health-status.healthy {
+    background-color: rgba(39, 174, 96, 0.1);
+    color: #27ae60;
+    border-left: 4px solid #27ae60;
+}
+
+.health-status.warning {
+    background-color: rgba(243, 156, 18, 0.1);
+    color: #f39c12;
+    border-left: 4px solid #f39c12;
+}
+
+.health-status.error {
+    background-color: rgba(231, 76, 60, 0.1);
+    color: #e74c3c;
+    border-left: 4px solid #e74c3c;
+}
+
+/* Modal Backup Options */
+.backup-options {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.backup-info.urgent {
+    color: #e74c3c;
+    font-weight: 500;
+    padding: 8px;
+    background-color: rgba(231, 76, 60, 0.1);
+    border-radius: 4px;
+    border-left: 3px solid #e74c3c;
+}
+
+.backup-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.backup-buttons.priority {
+    border: 1px solid #3498db;
+    background-color: rgba(52, 152, 219, 0.05);
+    padding: 10px;
+    border-radius: 6px;
+}
+
+.backup-buttons h6 {
+    margin: 0 0 8px 0;
+    color: #2c3e50;
+    font-size: 0.9rem;
+}
+
+.modal-view-listing-btn small {
+    display: block;
+    font-size: 0.7rem;
+    opacity: 0.8;
+    margin-top: 2px;
+}
+
+.expand-more-backups {
+    background: none;
+    border: 1px dashed #bdc3c7;
+    color: #7f8c8d;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin: 10px 0;
+}
+
+.expand-more-backups:hover {
+    border-color: #95a5a6;
+    color: #2c3e50;
+    background-color: rgba(149, 165, 166, 0.1);
+}
+
+/* Additional Backups */
+.additional-backups .backup-buttons {
+    padding: 10px;
+    background-color: rgba(149, 165, 166, 0.05);
+    border: 1px solid #ecf0f1;
+    border-radius: 4px;
+}
+
+/* Responsive Design for Enhanced Features */
+@media (max-width: 768px) {
+    .listing-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+    
+    .link-health-indicator {
+        font-size: 0.7rem;
+        padding: 1px 4px;
+    }
+    
+    .backup-links {
+        padding: 8px;
+    }
+    
+    .backup-buttons {
+        gap: 6px;
+    }
+    
+    .health-status {
+        padding: 8px;
+        font-size: 0.8rem;
+    }
 }

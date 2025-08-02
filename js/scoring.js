@@ -34,7 +34,7 @@ export class ApartmentScoring {
         }
     }) {
         let totalScore = 0;
-        let scoreBreakdown = {};
+        const scoreBreakdown = {};
         
         // Base Score: Rent within range (20 points)
         const rentScore = this.calculateRentScore(apartment.price, searchCriteria);

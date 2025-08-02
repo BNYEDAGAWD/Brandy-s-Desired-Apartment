@@ -3,16 +3,16 @@ import { beforeAll, afterEach } from 'vitest';
 beforeAll(() => {
   global.localStorage = {
     storage: {},
-    getItem: function(key) {
+    getItem(key) {
       return this.storage[key] || null;
     },
-    setItem: function(key, value) {
+    setItem(key, value) {
       this.storage[key] = value;
     },
-    removeItem: function(key) {
+    removeItem(key) {
       delete this.storage[key];
     },
-    clear: function() {
+    clear() {
       this.storage = {};
     }
   };

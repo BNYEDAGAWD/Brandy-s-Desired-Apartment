@@ -1,7 +1,7 @@
 import { ApartmentSearchEngine } from './search-engine.js';
 import { ApartmentScoring } from './scoring.js';
-import { UIComponents } from './ui-components.js';
 import { lazyLoader } from './lazy-loading.js';
+import { linkHealthMonitor } from './link-health-monitor.js';
 
 export class ApartmentFinderApp {
     constructor() {
@@ -16,6 +16,7 @@ export class ApartmentFinderApp {
     init() {
         this.bindEvents();
         this.loadBookmarks();
+        // eslint-disable-next-line no-console
         console.log('Apartment Finder App initialized');
     }
 
@@ -96,10 +97,17 @@ export class ApartmentFinderApp {
                 score: scorer.calculateScore(apt),
                 scoreBreakdown: scorer.getScoreBreakdown(apt)
             }));
+            
+            // Monitor URL health for better user experience
+            // eslint-disable-next-line no-console
+            console.log('🔍 Checking apartment listing URLs...');
+            this.apartments = await linkHealthMonitor.monitorApartmentUrls(this.apartments);
+            
             this.applyFilters();
             this.showResults();
             
         } catch (error) {
+            // eslint-disable-next-line no-console
             console.error('Search failed:', error);
             this.showToast('Search failed. Please try again.', 'error');
         } finally {
@@ -245,13 +253,39 @@ export class ApartmentFinderApp {
             });
         });
 
+        // Add backup link toggle functionality
+        document.querySelectorAll('.show-backups-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const backupLinks = button.parentElement.querySelector('.backup-links');
+                const chevron = button.querySelector('i');
+                
+                if (backupLinks) {
+                    const isVisible = backupLinks.style.display !== 'none';
+                    backupLinks.style.display = isVisible ? 'none' : 'block';
+                    
+                    // Update button text and icon
+                    const buttonText = button.childNodes[1]; // Text node after icon
+                    if (isVisible) {
+                        buttonText.textContent = ' More Options';
+                        chevron.className = 'fas fa-chevron-down';
+                        button.classList.remove('expanded');
+                    } else {
+                        buttonText.textContent = ' Hide Alternatives';
+                        chevron.className = 'fas fa-chevron-up';
+                        button.classList.add('expanded');
+                    }
+                }
+            });
+        });
+
         // Initialize lazy loading for new images
         setTimeout(() => {
             lazyLoader.refresh();
         }, 100);
     }
 
-    createApartmentCard(apartment, isRecent = false) {
+    createApartmentCard(apartment) {
         const scoreClass = apartment.score >= 80 ? 'high' : 
                           apartment.score >= 60 ? 'medium' : 'low';
         
@@ -310,15 +344,94 @@ export class ApartmentFinderApp {
                     <div class="card-price">$${apartment.price.toLocaleString()}/month</div>
                     
                     <div class="card-actions">
-                        <a href="${apartment.url}" target="_blank" rel="noopener noreferrer" class="view-listing-btn" onclick="event.stopPropagation();">
-                            <i class="fas fa-external-link-alt"></i>
-                            View Listing
-                        </a>
-                        <span class="listing-source">via ${apartment.source}</span>
+                        <div class="listing-buttons">
+                            ${this.renderPrimaryListingButton(apartment)}
+                            ${this.renderBackupOptions(apartment)}
+                        </div>
+                        <div class="listing-info">
+                            <span class="listing-source">Primary source: ${apartment.source}</span>
+                            ${apartment.urlHealthSummary ? `
+                                <div class="link-health-indicator ${apartment.urlHealthSummary.className}">
+                                    <i class="${apartment.urlHealthSummary.icon}"></i>
+                                    <span class="health-tooltip">${apartment.urlHealthSummary.message}</span>
+                                </div>
+                            ` : ''}
+                        </div>
                     </div>
                 </div>
             </div>
         `;
+    }
+
+    renderPrimaryListingButton(apartment) {
+        const healthStatus = apartment.urlHealth;
+        
+        let buttonClass = 'view-listing-btn primary';
+        let buttonText = `View on ${apartment.source}`;
+        let icon = 'fas fa-external-link-alt';
+        
+        if (healthStatus && !healthStatus.healthy) {
+            buttonClass += ' warning';
+            buttonText = `Try ${apartment.source}`;
+            icon = 'fas fa-exclamation-triangle';
+        }
+        
+        return `
+            <a href="${apartment.url}" target="_blank" rel="noopener noreferrer" 
+               class="${buttonClass}" onclick="event.stopPropagation();"
+               title="${healthStatus ? healthStatus.status : 'Link status unknown'}">
+                <i class="${icon}"></i>
+                ${buttonText}
+            </a>
+        `;
+    }
+
+    renderBackupOptions(apartment) {
+        const backupUrls = apartment.backupUrls || apartment.alternativeUrls || [];
+        
+        if (backupUrls.length === 0) {
+            return '';
+        }
+
+        const priorityBackups = backupUrls.filter(backup => backup.priority <= 2).slice(0, 3);
+        const additionalBackups = backupUrls.filter(backup => backup.priority > 2);
+
+        let backupHtml = '';
+        
+        // Always show top priority backups if primary link is unhealthy
+        const showBackupsByDefault = apartment.urlHealth && !apartment.urlHealth.healthy;
+        
+        if (priorityBackups.length > 0) {
+            backupHtml += `
+                <div class="backup-links" style="display: ${showBackupsByDefault ? 'block' : 'none'};">
+                    ${priorityBackups.map(backup => `
+                        <a href="${backup.url}" target="_blank" rel="noopener noreferrer" 
+                           class="view-listing-btn backup ${backup.type === 'search' ? 'search' : 'listing'}" 
+                           onclick="event.stopPropagation();"
+                           title="${backup.description || backup.name}">
+                            <i class="fas fa-${backup.type === 'search' ? 'search' : 'building'}"></i>
+                            ${backup.name}
+                        </a>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // Show toggle button for additional options
+        if (priorityBackups.length > 0 || additionalBackups.length > 0) {
+            const buttonText = showBackupsByDefault ? 'Hide Alternatives' : 'More Options';
+            const chevronDirection = showBackupsByDefault ? 'up' : 'down';
+            
+            backupHtml += `
+                <button class="show-backups-btn ${showBackupsByDefault ? 'expanded' : ''}" 
+                        onclick="event.stopPropagation(); this.toggleBackupLinks();">
+                    <i class="fas fa-chevron-${chevronDirection}"></i>
+                    ${buttonText}
+                </button>
+            `;
+        }
+
+        return backupHtml;
     }
 
     showApartmentDetails(apartment) {
@@ -411,11 +524,9 @@ export class ApartmentFinderApp {
                 <div class="listing-url-section">
                     <h4><i class="fas fa-external-link-alt"></i> View Full Listing</h4>
                     <div class="url-container">
-                        <a href="${apartment.url}" target="_blank" rel="noopener noreferrer" class="modal-view-listing-btn">
-                            <i class="fas fa-external-link-alt"></i>
-                            View on ${apartment.source}
-                        </a>
-                        <p class="url-disclaimer">Opens in a new tab. Listing provided by ${apartment.source}.</p>
+                        ${this.renderModalPrimaryButton(apartment)}
+                        ${this.renderModalHealthStatus(apartment)}
+                        ${this.renderModalBackupOptions(apartment)}
                     </div>
                 </div>
                 
@@ -474,6 +585,7 @@ export class ApartmentFinderApp {
     }
 
     loadBookmarks() {
+        // eslint-disable-next-line no-console
         console.log(`Loaded ${this.bookmarkedApartments.length} bookmarked apartments`);
     }
 
@@ -546,6 +658,130 @@ export class ApartmentFinderApp {
             toast.classList.remove('show');
             setTimeout(() => container.removeChild(toast), 300);
         }, 4000);
+    }
+
+    renderModalPrimaryButton(apartment) {
+        const healthStatus = apartment.urlHealth;
+        
+        let buttonClass = 'modal-view-listing-btn primary';
+        let buttonText = `View on ${apartment.source}`;
+        let icon = 'fas fa-external-link-alt';
+        
+        if (healthStatus && !healthStatus.healthy) {
+            buttonClass += ' warning';
+            buttonText = `Try ${apartment.source} (may not work)`;
+            icon = 'fas fa-exclamation-triangle';
+        }
+        
+        return `
+            <a href="${apartment.url}" target="_blank" rel="noopener noreferrer" class="${buttonClass}">
+                <i class="${icon}"></i>
+                ${buttonText}
+            </a>
+        `;
+    }
+
+    renderModalHealthStatus(apartment) {
+        const healthStatus = apartment.urlHealth;
+        const healthSummary = apartment.urlHealthSummary;
+        
+        if (!healthStatus || !healthSummary) {
+            return `<p class="url-disclaimer">Primary listing from ${  apartment.source  }. Link status unknown.</p>`;
+        }
+
+        let statusHtml = '';
+        
+        if (healthStatus.healthy) {
+            if (healthStatus.status === 'cors_accessible' || healthStatus.status === 'cors_blocked') {
+                statusHtml = `
+                    <div class="health-status warning">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Link appears to work but cannot be fully verified due to browser security restrictions.</span>
+                    </div>
+                `;
+            } else {
+                statusHtml = `
+                    <div class="health-status healthy">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Link verified and accessible (response: ${healthStatus.responseTime}ms)</span>
+                    </div>
+                `;
+            }
+        } else {
+            statusHtml = `
+                <div class="health-status error">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Primary link may not work: ${healthSummary.message}. Try alternatives below.</span>
+                </div>
+            `;
+        }
+
+        return `${statusHtml  }<p class="url-disclaimer">Primary listing from ${apartment.source}.</p>`;
+    }
+
+    renderModalBackupOptions(apartment) {
+        const backupUrls = apartment.backupUrls || apartment.alternativeUrls || [];
+        
+        if (backupUrls.length === 0) {
+            return '';
+        }
+
+        const priorityBackups = backupUrls.filter(backup => backup.priority <= 2);
+        const additionalBackups = backupUrls.filter(backup => backup.priority > 2);
+
+        let backupHtml = `
+            <div class="backup-options">
+                <h5><i class="fas fa-life-ring"></i> Alternative Search Options</h5>
+        `;
+
+        if (apartment.urlHealth && !apartment.urlHealth.healthy) {
+            backupHtml += '<p class="backup-info urgent">⚠️ Primary link issue detected. These alternatives are recommended:</p>';
+        } else {
+            backupHtml += '<p class="backup-info">If the primary link doesn\'t work, try these alternatives:</p>';
+        }
+
+        // Priority backups (always show if primary is unhealthy)
+        if (priorityBackups.length > 0) {
+            backupHtml += `
+                <div class="backup-buttons priority">
+                    <h6>Recommended Alternatives:</h6>
+                    ${priorityBackups.map(backup => `
+                        <a href="${backup.url}" target="_blank" rel="noopener noreferrer" 
+                           class="modal-view-listing-btn backup ${backup.type === 'search' ? 'search' : 'listing'}"
+                           title="${backup.description || backup.name}">
+                            <i class="fas fa-${backup.type === 'search' ? 'search' : 'building'}"></i>
+                            ${backup.name}
+                            ${backup.description ? `<small>${backup.description}</small>` : ''}
+                        </a>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // Additional backups (collapsible)
+        if (additionalBackups.length > 0) {
+            backupHtml += `
+                <div class="additional-backups">
+                    <button class="expand-more-backups" onclick="this.toggleAdditionalBackups();">
+                        <i class="fas fa-chevron-down"></i>
+                        Show More Options (${additionalBackups.length})
+                    </button>
+                    <div class="backup-buttons additional" style="display: none;">
+                        ${additionalBackups.map(backup => `
+                            <a href="${backup.url}" target="_blank" rel="noopener noreferrer" 
+                               class="modal-view-listing-btn backup ${backup.type}"
+                               title="${backup.description || backup.name}">
+                                <i class="fas fa-${backup.type === 'search' ? 'search' : 'building'}"></i>
+                                ${backup.name}
+                            </a>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        backupHtml += '</div>';
+        return backupHtml;
     }
 }
 

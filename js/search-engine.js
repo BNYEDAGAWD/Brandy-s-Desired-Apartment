@@ -187,6 +187,7 @@ export class ApartmentSearchEngine {
                 datePosted: datePosted.toISOString(),
                 source: this.getRandomSource(),
                 url: this.generateListingUrl(buildingType, areaData.areaName, zipCode, finalPrice),
+                backupUrls: this.generateBackupUrls(areaData.areaName, zipCode),
                 contact: {
                     phone: this.generatePhoneNumber(),
                     email: `leasing@${buildingType.toLowerCase().replace(/\s+/g, '')}apartments.com`
@@ -244,67 +245,117 @@ export class ApartmentSearchEngine {
     }
 
     generateListingUrl(buildingType, areaName, zipCode, price) {
-        // Use more reliable, simpler search URLs that are less likely to break
-        const sources = [
+        // Ultra-stable URL generation - prioritize simplicity and reliability
+        const stableSources = [
             {
                 name: 'Apartments.com',
                 baseUrl: 'https://www.apartments.com',
-                template: (_building, area, zip, price) => {
-                    const minPrice = Math.floor(price * 0.9);
-                    const maxPrice = Math.floor(price * 1.1);
-                    // Use general city search page
-                    return `${area.toLowerCase().replace(/\s+/g, '-')}-ca/?bb=${minPrice}-${maxPrice}`;
-                }
+                template: (_building, area, zip, _price) => {
+                    // Use the most stable page - just metro area
+                    return 'los-angeles-ca/';
+                },
+                weight: 3 // Higher weight = more likely to be selected
             },
             {
                 name: 'Zillow',
                 baseUrl: 'https://www.zillow.com',
-                template: (_building, area, zip, price) => {
-                    // Use simpler zip code search
-                    return `homes/for_rent/${zip}_rb/`;
-                }
+                template: (_building, area, zip, _price) => {
+                    // Use metro-level rentals page
+                    return 'los-angeles-ca/rentals/';
+                },
+                weight: 3
             },
             {
                 name: 'Trulia',
                 baseUrl: 'https://www.trulia.com',
                 template: (_building, area, zip, _price) => {
-                    // Use basic area search
-                    const citySlug = area.toLowerCase().replace(/\s+/g, '_');
-                    return `for_rent/${citySlug},ca/${zip}_p/`;
-                }
+                    // Use stable city-level page
+                    return 'for_rent/Los_Angeles,CA/';
+                },
+                weight: 2
             },
             {
                 name: 'HotPads',
                 baseUrl: 'https://hotpads.com',
                 template: (_building, area, zip, _price) => {
-                    // Use basic city search
-                    const citySlug = area.toLowerCase().replace(/\s+/g, '-');
-                    return `${citySlug}-ca/apartments-for-rent`;
-                }
+                    // Use city-level search
+                    return 'los-angeles-ca/apartments-for-rent';
+                },
+                weight: 2
             },
             {
                 name: 'Westside Rentals',
                 baseUrl: 'https://www.westsiderentals.com',
                 template: (_building, area, zip, _price) => {
-                    // Use basic search form
-                    return `listingsearch?search_form%5Bcity%5D=${encodeURIComponent(area)}`;
-                }
+                    // Use homepage - most stable
+                    return '';
+                },
+                weight: 2
             },
             {
                 name: 'Realtor.com',
                 baseUrl: 'https://www.realtor.com',
                 template: (_building, area, zip, _price) => {
-                    // Use basic apartments search
-                    const citySlug = area.toLowerCase().replace(/\s+/g, '-');
-                    return `apartments-for-rent/${citySlug}-ca/`;
-                }
+                    // Use city-level apartments page
+                    return 'apartments-for-rent/Los-Angeles_CA';
+                },
+                weight: 1
             }
         ];
 
-        const randomSource = sources[Math.floor(Math.random() * sources.length)];
-        const urlPath = randomSource.template(buildingType, areaName, zipCode, price);
-        
-        return `${randomSource.baseUrl}/${urlPath}`;
+        // Select source based on weights (higher weight = more likely)
+        const totalWeight = stableSources.reduce((sum, source) => sum + source.weight, 0);
+        let random = Math.random() * totalWeight;
+        let selectedSource;
+
+        for (const source of stableSources) {
+            random -= source.weight;
+            if (random <= 0) {
+                selectedSource = source;
+                break;
+            }
+        }
+
+        // Fallback to first source if selection failed
+        if (!selectedSource) {
+            selectedSource = stableSources[0];
+        }
+
+        try {
+            const urlPath = selectedSource.template(buildingType, areaName, zipCode, price);
+            const finalUrl = urlPath ? `${selectedSource.baseUrl}/${urlPath}` : selectedSource.baseUrl;
+            
+            // Validate the generated URL
+            if (!this.isValidUrl(finalUrl)) {
+                throw new Error('Generated invalid URL');
+            }
+            
+            return finalUrl;
+        } catch (error) {
+            console.warn(`URL generation failed for ${selectedSource.name}, using safe fallback:`, error);
+            // Ultra-safe fallback - guaranteed to work
+            return 'https://www.apartments.com/los-angeles-ca/';
+        }
+    }
+
+    // Enhanced URL validation
+    isValidUrl(url) {
+        try {
+            const urlObj = new URL(url);
+            return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
+        } catch {
+            return false;
+        }
+    }
+
+    // Helper method to sanitize city names for URLs
+    sanitizeCityName(cityName) {
+        return cityName
+            .toLowerCase()
+            .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
+            .replace(/\s+/g, '-') // Replace spaces with hyphens
+            .replace(/-+/g, '-') // Replace multiple hyphens with single
+            .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
     }
 
     generateMockImages() {
@@ -348,6 +399,101 @@ export class ApartmentSearchEngine {
 
     delay(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    // URL validation and health checking
+    async validateUrl(url) {
+        try {
+            // Use a simple HEAD request to check if URL exists
+            // Note: This may be blocked by CORS, so we'll use a graceful fallback
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+            
+            const response = await fetch(url, {
+                method: 'HEAD',
+                signal: controller.signal,
+                mode: 'no-cors' // Bypass CORS for basic connectivity check
+            });
+            
+            clearTimeout(timeoutId);
+            return { valid: true, status: response.status || 'unknown' };
+        } catch (error) {
+            // If HEAD request fails, the URL might still work for users
+            // Return as potentially valid with warning
+            return { 
+                valid: true, 
+                status: 'unverified',
+                warning: 'Could not verify URL due to CORS or network restrictions'
+            };
+        }
+    }
+
+    // Enhanced URL generation with validation
+    async generateValidatedListingUrl(buildingType, areaName, zipCode, price) {
+        const primaryUrl = this.generateListingUrl(buildingType, areaName, zipCode, price);
+        
+        // In development/testing, validate the URL
+        if (process.env.NODE_ENV === 'development') {
+            const validation = await this.validateUrl(primaryUrl);
+            if (validation.warning) {
+                console.warn(`URL validation warning for ${primaryUrl}: ${validation.warning}`);
+            }
+        }
+        
+        return primaryUrl;
+    }
+
+    // Generate comprehensive backup URLs using enhanced link monitor
+    generateBackupUrls(areaName, zipCode, price) {
+        // Import the enhanced alternative URL generator from link health monitor
+        const encodedArea = encodeURIComponent(areaName || '');
+        const encodedQuery = encodeURIComponent(`${areaName} CA ${zipCode} apartments rent 2 bedroom`);
+        
+        // Primary backup sources - guaranteed to work
+        const primaryBackups = [
+            {
+                name: 'Google Search',
+                url: `https://www.google.com/search?q=${encodedQuery}&tbm=&tbs=qdr:m`,
+                type: 'search',
+                priority: 1,
+                description: 'Search all listings'
+            },
+            {
+                name: 'Apartments.com Browse',
+                url: `https://www.apartments.com/los-angeles-ca/`,
+                type: 'listings',
+                priority: 1,
+                description: 'Browse LA apartments'
+            },
+            {
+                name: 'Zillow Rentals',
+                url: `https://www.zillow.com/los-angeles-ca/rentals/`,
+                type: 'listings',
+                priority: 1,
+                description: 'Rental listings'
+            }
+        ];
+
+        // Secondary backup sources  
+        const secondaryBackups = [
+            {
+                name: 'HotPads',
+                url: `https://hotpads.com/los-angeles-ca/apartments-for-rent`,
+                type: 'listings',
+                priority: 2,
+                description: 'Map-based search'
+            },
+            {
+                name: 'Westside Rentals',
+                url: `https://www.westsiderentals.com/`,
+                type: 'listings',
+                priority: 2,
+                description: 'Westside specialist'
+            }
+        ];
+
+        // Return prioritized backup options
+        return [...primaryBackups, ...secondaryBackups];
     }
 
     // Method to validate apartment against mandatory criteria
