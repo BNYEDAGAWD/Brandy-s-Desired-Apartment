@@ -1,5 +1,8 @@
-// Main Application Logic
-class ApartmentFinderApp {
+import { ApartmentSearchEngine } from './search-engine.js';
+import { ApartmentScoring } from './scoring.js';
+import { UIComponents } from './ui-components.js';
+
+export class ApartmentFinderApp {
     constructor() {
         this.apartments = [];
         this.filteredApartments = [];
@@ -77,15 +80,21 @@ class ApartmentFinderApp {
         this.showLoadingState();
         
         try {
-            // Initialize search engine
+            // Initialize search engine and scoring
             const searchEngine = new ApartmentSearchEngine();
+            const scorer = new ApartmentScoring();
             
             // Start search with progress updates
             const apartments = await searchEngine.searchApartments((progress) => {
                 this.updateProgress(progress);
             });
             
-            this.apartments = apartments;
+            // Score apartments using the scoring system
+            this.apartments = apartments.map(apt => ({
+                ...apt,
+                score: scorer.calculateScore(apt),
+                scoreBreakdown: scorer.getScoreBreakdown(apt)
+            }));
             this.applyFilters();
             this.showResults();
             
@@ -502,6 +511,8 @@ class ApartmentFinderApp {
 }
 
 // Initialize app when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    new ApartmentFinderApp();
-});
+if (typeof window !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', () => {
+        new ApartmentFinderApp();
+    });
+}

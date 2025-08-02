@@ -1,5 +1,4 @@
-// UI Components and Utilities
-class UIComponents {
+export class UIComponents {
     constructor() {
         this.modal = null;
         this.toastContainer = null;
@@ -467,5 +466,5 @@ class UIComponents {
     }
 }
 
-// Create global instance
-const UI = new UIComponents();
+// Export for use in other modules
+export const UI = new UIComponents();

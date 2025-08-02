@@ -1,5 +1,4 @@
-// Claude API Integration for Enhanced Search Logic
-class ClaudeIntegration {
+export class ClaudeIntegration {
     constructor() {
         this.apiKey = null; // Will be set by user in settings
         this.baseURL = 'https://api.anthropic.com/v1/messages';
@@ -383,5 +382,5 @@ Respond in JSON format with actionable recommendations.
     }
 }
 
-// Create global instance
-const claudeAI = new ClaudeIntegration();
+// Export for use in other modules
+export const claudeAI = new ClaudeIntegration();

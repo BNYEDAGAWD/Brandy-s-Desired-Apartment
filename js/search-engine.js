@@ -1,5 +1,4 @@
-// Apartment Search Engine
-class ApartmentSearchEngine {
+export class ApartmentSearchEngine {
     constructor() {
         this.searchCriteria = {
             minRent: 4400,
@@ -40,7 +39,7 @@ class ApartmentSearchEngine {
             { name: 'craigslist', priority: 3, active: true }
         ];
         
-        this.apartmentScorer = new ApartmentScorer();
+        // Scoring will be handled by external module
     }
 
     async searchApartments(progressCallback) {
@@ -72,13 +71,14 @@ class ApartmentSearchEngine {
             progressCallback(((totalSteps - 1) / totalSteps) * 100);
         }
         
-        const scoredApartments = this.scoreAndRankApartments(allApartments);
+        // Return apartments without scoring (will be handled by caller)
+        const validApartments = allApartments.filter(apt => this.validateApartment(apt));
         
         if (progressCallback) {
             progressCallback(100);
         }
         
-        return this.removeDuplicates(scoredApartments);
+        return this.removeDuplicates(validApartments);
     }
 
     async searchZipCode(zipCode) {
@@ -267,12 +267,7 @@ class ApartmentSearchEngine {
         return `${baseDescription} Key features include: ${amenityText}. Contact us today to schedule a viewing!`;
     }
 
-    scoreAndRankApartments(apartments) {
-        return apartments.map(apartment => {
-            apartment.score = this.apartmentScorer.calculateScore(apartment, this.searchCriteria);
-            return apartment;
-        }).sort((a, b) => b.score - a.score);
-    }
+    // Removed scoreAndRankApartments - handled by external scoring module
 
     removeDuplicates(apartments) {
         const seen = new Set();

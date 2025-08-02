@@ -1,14 +1,24 @@
 {
   "name": "brandys-desired-apartment-finder",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "West Los Angeles luxury apartment search with automated search capabilities and intelligent ranking",
   "main": "index.html",
+  "type": "module",
   "scripts": {
-    "start": "npx http-server . -p 3000 -c-1",
-    "build": "echo 'No build process needed for static site'",
-    "deploy": "gh-pages -d .",
-    "test": "echo 'Tests will be added in future version'",
-    "serve": "python3 -m http.server 8000 || python -m SimpleHTTPServer 8000"
+    "start": "npm run dev",
+    "dev": "vite serve --port 3000 --host",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "test:ui": "vitest --ui",
+    "lint": "eslint . --ext .js,.ts,.html --fix",
+    "format": "prettier --write .",
+    "typecheck": "tsc --noEmit",
+    "deploy": "npm run build && gh-pages -d dist",
+    "serve": "http-server dist -p 8000 -c-1",
+    "analyze": "npm run build && npx vite-bundle-analyzer dist",
+    "lighthouse": "lhci autorun"
   },
   "repository": {
     "type": "git",
@@ -23,7 +33,11 @@
     "luxury",
     "github-pages",
     "javascript",
-    "responsive"
+    "typescript",
+    "progressive-web-app",
+    "responsive",
+    "vite",
+    "modern"
   ],
   "author": "Brandy's Apartment Search Team",
   "license": "MIT",
@@ -32,16 +46,37 @@
   },
   "homepage": "https://bnyedagawd.github.io/Brandy-s-Desired-Apartment/",
   "devDependencies": {
-    "gh-pages": "^6.0.0",
-    "http-server": "^14.1.1"
+    "@lhci/cli": "^0.12.0",
+    "@types/node": "^20.10.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "@vitejs/plugin-legacy": "^5.2.0",
+    "@vitest/coverage-v8": "^1.0.0",
+    "@vitest/ui": "^1.0.0",
+    "eslint": "^8.55.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-html": "^7.1.0",
+    "gh-pages": "^6.1.0",
+    "happy-dom": "^12.10.3",
+    "http-server": "^14.1.1",
+    "jsdom": "^23.2.0",
+    "lighthouse": "^11.4.0",
+    "prettier": "^3.1.0",
+    "typescript": "^5.3.2",
+    "vite": "^5.0.0",
+    "vite-bundle-analyzer": "^0.7.0",
+    "vite-plugin-pwa": "^0.17.4",
+    "vitest": "^1.0.0",
+    "workbox-window": "^7.0.0"
   },
-  "dependencies": {},
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
   },
   "browserslist": [
-    "> 1%",
+    "> 0.5%",
     "last 2 versions",
-    "not dead"
+    "not dead",
+    "not ie 11"
   ]
 }
