@@ -102,9 +102,7 @@ export class ApartmentFinderApp {
                 scoreBreakdown: scorer.getScoreBreakdown(apt)
             }));
             
-            // Monitor URL health for better user experience
-            // eslint-disable-next-line no-console
-            console.log('🔍 Checking apartment listing URLs...');
+            // Process listings with advanced verification (silent operation)
             this.apartments = await linkHealthMonitor.monitorApartmentUrls(this.apartments);
             
             this.applyFilters();

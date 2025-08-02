@@ -7,6 +7,7 @@ import { DeepSearchClient } from './deepsearch-client.js';
 export class RealApartmentSearchEngine {
     constructor() {
         this.searchCriteria = {
+            rentRange: "$4,400 - $5,200/month",
             minRent: 4400,
             maxRent: 5200,
             bedrooms: 2,
@@ -14,22 +15,34 @@ export class RealApartmentSearchEngine {
             maxBathrooms: 2.0,
             zipCodes: ['90066', '90230', '90232', '90034'],
             zipCodePriority: {
-                '90066': 1, // Mar Vista - highest priority
-                '90230': 2, // Central Culver City
-                '90232': 3, // Southeast Culver City
-                '90034': 4  // Palms
+                '90066': 1, // Mar Vista - Priority 1
+                '90230': 2, // Central Culver City - Priority 2
+                '90232': 3, // Southeast Culver City - Priority 3
+                '90034': 4  // Palms - Priority 4
+            },
+            targetZipCodes: {
+                "90066": "Mar Vista (Priority 1)",
+                "90230": "Central Culver City (Priority 2)",
+                "90232": "Southeast Culver City (Priority 3)",
+                "90034": "Palms (Priority 4)"
             },
             requiredAmenities: [
-                'washer_dryer',
-                'air_conditioning',
-                'outdoor_space',
-                'above_ground_floor'
+                'In-unit washer/dryer',
+                'Air conditioning',
+                'Outdoor space (balcony/patio/terrace)',
+                'Above ground floor'
             ],
             preferredFeatures: [
-                'recently_renovated',
-                'modern_interior',
-                'natural_light'
-            ]
+                'Recently renovated (within 10 years)',
+                'Modern/contemporary interior',
+                'Ample natural light'
+            ],
+            laDmaConfig: {
+                market: 'los-angeles-dma',
+                region: 'us-west',
+                locale: 'en-US',
+                radius: '25mi'
+            }
         };
         
         this.deepSearchClient = new DeepSearchClient();

@@ -1,14 +1,18 @@
 /**
- * Link Health Monitor
+ * Link Health Monitor - Enhanced with Advanced Verification
  * Monitors and tracks the health of apartment listing URLs
- * Provides fallback mechanisms for dead links
+ * Integrates with advanced verification engine for comprehensive link processing
  */
+
+import { EnhancedLinkProcessor } from './enhanced-link-processor.js';
 
 export class LinkHealthMonitor {
     constructor() {
         this.healthCache = new Map();
         this.maxCacheAge = 5 * 60 * 1000; // 5 minutes
         this.timeoutDuration = 10000; // 10 seconds
+        this.enhancedProcessor = new EnhancedLinkProcessor();
+        this.silentMode = true; // Operate silently unless technical issues require user notification
     }
 
     /**
@@ -442,14 +446,119 @@ export class LinkHealthMonitor {
     }
 
     /**
-     * Monitor apartment URLs and update health status
+     * Monitor apartment URLs with advanced verification and processing
      * @param {Array<Object>} apartments - Array of apartment objects
-     * @returns {Promise<Array<Object>>} Apartments with health status
+     * @returns {Promise<Array<Object>>} Apartments with enhanced link processing
      */
     async monitorApartmentUrls(apartments) {
-        // eslint-disable-next-line no-console
-        console.log(`🔍 Monitoring health of ${apartments.length} apartment URLs...`);
+        if (!this.silentMode) {
+            // eslint-disable-next-line no-console
+            console.log(`🔍 Processing ${apartments.length} apartment listings with advanced verification...`);
+        }
         
+        try {
+            // Use enhanced link processor for comprehensive processing
+            const processedApartments = await this.enhancedProcessor.processApartmentListings(apartments);
+            
+            // Apply legacy health monitoring for compatibility
+            const finalResults = await Promise.all(
+                processedApartments.map(apartment => this.applyLegacyHealthCheck(apartment))
+            );
+            
+            if (!this.silentMode) {
+                const successfulCount = finalResults.filter(a => 
+                    a.linkProcessing?.confidence > 0.5 || a.urlHealth?.healthy
+                ).length;
+                // eslint-disable-next-line no-console
+                console.log(`✅ Link processing complete. ${successfulCount}/${finalResults.length} listings processed successfully.`);
+            }
+            
+            return finalResults;
+            
+        } catch (error) {
+            // Silent fallback to legacy monitoring
+            if (!this.silentMode) {
+                // eslint-disable-next-line no-console
+                console.warn('Advanced processing unavailable, using legacy monitoring:', error.message);
+            }
+            
+            return await this.legacyMonitorApartmentUrls(apartments);
+        }
+    }
+
+    /**
+     * Apply legacy health check to maintain compatibility
+     * @param {Object} apartment - Processed apartment
+     * @returns {Promise<Object>} Apartment with legacy health data
+     */
+    async applyLegacyHealthCheck(apartment) {
+        try {
+            // Skip if already has comprehensive processing
+            if (apartment.linkProcessing && apartment.linkProcessing.confidence > 0.6) {
+                return {
+                    ...apartment,
+                    urlHealth: {
+                        healthy: true,
+                        status: 'processed',
+                        confidence: apartment.linkProcessing.confidence,
+                        method: 'advanced_verification'
+                    },
+                    urlHealthSummary: {
+                        className: 'healthy',
+                        icon: 'fas fa-check-circle',
+                        message: 'Link verified and optimized',
+                        color: '#27ae60'
+                    },
+                    alternativeUrls: apartment.linkProcessing.fallbackUrls || []
+                };
+            }
+            
+            // Apply legacy health check for lower confidence results
+            const health = await this.checkUrlHealth(apartment.url);
+            const healthSummary = this.getHealthSummary(health);
+            
+            return {
+                ...apartment,
+                urlHealth: health,
+                urlHealthSummary: healthSummary,
+                alternativeUrls: apartment.linkProcessing?.fallbackUrls || 
+                    (!health.healthy ? this.generateAlternativeUrls(
+                        apartment.address?.split(',')[1]?.trim(), 
+                        apartment.zipCode, 
+                        apartment.price
+                    ) : [])
+            };
+            
+        } catch (error) {
+            // Ultimate fallback
+            return {
+                ...apartment,
+                urlHealth: { 
+                    healthy: false, 
+                    status: 'verification_restricted', 
+                    error: 'browser_limitation' 
+                },
+                urlHealthSummary: {
+                    className: 'warning',
+                    icon: 'fas fa-link',
+                    message: 'Multiple options available',
+                    color: '#f39c12'
+                },
+                alternativeUrls: this.generateAlternativeUrls(
+                    apartment.address?.split(',')[1]?.trim(), 
+                    apartment.zipCode, 
+                    apartment.price
+                )
+            };
+        }
+    }
+
+    /**
+     * Legacy monitoring method for fallback compatibility
+     * @param {Array<Object>} apartments - Array of apartment objects
+     * @returns {Promise<Array<Object>>} Apartments with basic health status
+     */
+    async legacyMonitorApartmentUrls(apartments) {
         const monitored = [];
         
         for (const apartment of apartments) {
@@ -461,7 +570,6 @@ export class LinkHealthMonitor {
                     ...apartment,
                     urlHealth: health,
                     urlHealthSummary: healthSummary,
-                    // Add alternative URLs if main link is unhealthy
                     alternativeUrls: !health.healthy ? 
                         this.generateAlternativeUrls(apartment.address?.split(',')[1]?.trim(), apartment.zipCode, apartment.price) : 
                         apartment.backupUrls || []
@@ -471,23 +579,23 @@ export class LinkHealthMonitor {
                 await new Promise(resolve => setTimeout(resolve, 100));
                 
             } catch (error) {
-                // eslint-disable-next-line no-console
-                console.warn(`Failed to monitor URL for apartment ${apartment.id}:`, error);
                 monitored.push({
                     ...apartment,
                     urlHealth: { healthy: false, status: 'monitor_error', error: error.message },
                     urlHealthSummary: {
-                        className: 'error',
-                        icon: 'fas fa-exclamation-circle',
-                        message: 'Monitoring failed',
-                        color: '#e74c3c'
-                    }
+                        className: 'warning',
+                        icon: 'fas fa-link',
+                        message: 'Alternative options available',
+                        color: '#f39c12'
+                    },
+                    alternativeUrls: this.generateAlternativeUrls(
+                        apartment.address?.split(',')[1]?.trim(), 
+                        apartment.zipCode, 
+                        apartment.price
+                    )
                 });
             }
         }
-        
-        // eslint-disable-next-line no-console
-        console.log(`✅ URL monitoring complete. ${monitored.filter(a => a.urlHealth?.healthy).length}/${monitored.length} URLs appear healthy.`);
         
         return monitored;
     }

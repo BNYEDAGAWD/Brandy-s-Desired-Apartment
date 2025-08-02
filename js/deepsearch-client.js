@@ -73,21 +73,38 @@ export class DeepSearchClient {
         }
 
         try {
+            // Use optimized LA DMA parameters
             const requestBody = {
-                zip_codes: zipCodes,
+                zip_codes: zipCodes || ['90066', '90230', '90232', '90034'],
                 max_results: filters.maxResults || 50,
                 filters: {
-                    min_price: filters.minPrice,
-                    max_price: filters.maxPrice,
-                    min_score: filters.minScore,
-                    required_amenities: filters.requiredAmenities
+                    min_price: filters.minPrice || 4400,
+                    max_price: filters.maxPrice || 5200,
+                    min_score: filters.minScore || 75,
+                    required_amenities: filters.requiredAmenities || [
+                        'In-unit washer/dryer',
+                        'Air conditioning',
+                        'Outdoor space (balcony/patio/terrace)',
+                        'Above ground floor'
+                    ]
+                },
+                geo_params: {
+                    location: 'Los Angeles, CA',
+                    dma_code: 'los-angeles-dma',
+                    radius: '25mi',
+                    region: 'us-west'
+                },
+                search_params: {
+                    freshness: 'week',  // Past week listings
+                    sort: 'relevance',
+                    dedup: true
                 }
             };
 
-            console.log('🔍 Sending search request to DeepSearchAgent:', requestBody);
+            console.log('🔍 Sending LA DMA optimized search request to DeepSearchAgent:', requestBody);
 
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 60000);
+            const timeoutId = setTimeout(() => controller.abort(), 90000); // Increased timeout for thorough search
             
             const response = await fetch(`${this.baseUrl}/search`, {
                 method: 'POST',
@@ -259,12 +276,16 @@ export class DeepSearchClient {
     }
 
     transformAmenities(amenities) {
-        // Map DeepSearchAgent amenity format to frontend format
+        // Map DeepSearchAgent amenity format to frontend format with updated mappings
         const amenityMap = {
             'washer_dryer': 'In-Unit Washer/Dryer',
+            'washer_dryer_in_unit': 'In-Unit Washer/Dryer',
             'air_conditioning': 'Central Air Conditioning',
-            'outdoor_space': 'Private Balcony',
-            'parking': 'Parking Garage',
+            'outdoor_space': 'Private Balcony/Patio',
+            'above_ground_floor': 'Above Ground Floor',
+            'renovated': 'Recently Renovated',
+            'natural_light': 'Ample Natural Light',
+            'parking': 'Parking Included',
             'pool': 'Swimming Pool',
             'gym': 'Fitness Center',
             'dishwasher': 'Dishwasher',
@@ -286,9 +307,13 @@ export class DeepSearchClient {
     getHighlightFeatures(amenities) {
         const highlights = [
             'washer_dryer',
+            'washer_dryer_in_unit',
             'air_conditioning', 
             'outdoor_space',
+            'above_ground_floor',
+            'renovated',
             'recently_renovated',
+            'natural_light',
             'hardwood',
             'granite'
         ];
@@ -317,29 +342,44 @@ export class DeepSearchClient {
     }
 
     calculateDisplayScore(apartment) {
-        // Use validation score if available, otherwise calculate basic score
+        // Use validation score if available, otherwise calculate based on criteria
         const validation = apartment.validation;
         if (validation && validation.percentage) {
             return Math.round(validation.percentage);
         }
 
-        // Fallback scoring based on available data
-        let score = 60; // Base score
+        // Enhanced scoring based on specific requirements
+        let score = 50; // Base score
         
-        // Price appropriateness (within target range)
+        // Price appropriateness (within target range) - 25 points
         const price = apartment.price || 0;
         if (price >= 4400 && price <= 5200) {
-            score += 20;
+            score += 25;
+        } else if (price >= 4000 && price <= 5500) {
+            score += 15; // Partial credit for close range
         }
         
-        // Required amenities
+        // Required amenities - 10 points each (40 total)
         const amenities = apartment.amenities || [];
-        if (amenities.includes('washer_dryer')) score += 5;
-        if (amenities.includes('air_conditioning')) score += 5;
-        if (amenities.includes('outdoor_space')) score += 5;
+        if (amenities.includes('washer_dryer') || amenities.includes('washer_dryer_in_unit')) score += 10;
+        if (amenities.includes('air_conditioning')) score += 10;
+        if (amenities.includes('outdoor_space')) score += 10;
+        if (amenities.includes('above_ground_floor')) score += 10;
         
-        // Premium features
+        // Preferred features - 5 points each (15 total)
+        if (amenities.includes('renovated') || amenities.includes('recently_renovated')) score += 5;
+        if (amenities.includes('natural_light')) score += 5;
         if (this.hasPremiumAmenities(amenities)) score += 5;
+        
+        // Location priority boost
+        const zipCode = apartment.zip_code || apartment.zipCode;
+        const priorityBoost = {
+            '90066': 10, // Mar Vista - Priority 1
+            '90230': 7,  // Central Culver City - Priority 2
+            '90232': 5,  // Southeast Culver City - Priority 3
+            '90034': 3   // Palms - Priority 4
+        };
+        score += priorityBoost[zipCode] || 0;
         
         return Math.min(100, Math.max(0, score));
     }

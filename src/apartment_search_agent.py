@@ -51,8 +51,38 @@ class ApartmentSearchAgent:
             temperature=self.config.get("agents.react.temperature", 0.1)
         )
         
-        # Apartment search criteria from config
-        self.search_criteria = self.config.get("apartment_search", {})
+        # Updated apartment search criteria with your specific requirements
+        self.search_criteria = {
+            "rent_range": "$4,400 - $5,200/month",
+            "min_rent": 4400,
+            "max_rent": 5200,
+            "bedrooms": 2,
+            "min_bathrooms": 1.5,
+            "max_bathrooms": 2.0,
+            "required_amenities": [
+                "In-unit washer/dryer",
+                "Air conditioning",
+                "Outdoor space (balcony/patio/terrace)",
+                "Above ground floor"
+            ],
+            "preferred_features": [
+                "Recently renovated (within 10 years)",
+                "Modern/contemporary interior",
+                "Ample natural light"
+            ],
+            "target_zip_codes": {
+                "90066": "Mar Vista (Priority 1)",
+                "90230": "Central Culver City (Priority 2)",
+                "90232": "Southeast Culver City (Priority 3)",
+                "90034": "Palms (Priority 4)"
+            },
+            "la_dma_config": {
+                "market": "los-angeles-dma",
+                "region": "us-west",
+                "locale": "en-US",
+                "radius": "25mi"
+            }
+        }
         
     @tool
     def apartment_search_tool(self, zip_code: str, criteria: Dict[str, Any]) -> List[Dict]:
@@ -76,11 +106,18 @@ class ApartmentSearchAgent:
             try:
                 logger.info(f"Searching {platform}: {query}")
                 
-                # Use DeepSearchAgent's web search
-                search_results = self.search_tool.search(
-                    query=query,
-                    max_results=self.config.get("search_engines.serper.max_results", 10)
-                )
+                # Use DeepSearchAgent's web search with LA DMA parameters
+                search_params = {
+                    "query": query,
+                    "max_results": 15,  # Increased for better coverage
+                    "location": "Los Angeles, California, United States",
+                    "gl": "us",  # Country code
+                    "hl": "en",  # Language  
+                    "tbs": "qdr:w",  # Time-based search: past week for fresh listings
+                    "num": 15
+                }
+                
+                search_results = self.search_tool.search(**search_params)
                 
                 # Process search results for apartment listings
                 platform_listings = self._extract_apartment_listings(
@@ -89,8 +126,8 @@ class ApartmentSearchAgent:
                 
                 all_listings.extend(platform_listings)
                 
-                # Rate limiting
-                asyncio.sleep(0.5)
+                # Smart rate limiting with backoff
+                await asyncio.sleep(0.5 if platform != "apartments_com" else 1.0)
                 
             except Exception as e:
                 logger.error(f"Search failed for {platform}: {e}")
@@ -244,7 +281,7 @@ class ApartmentSearchAgent:
         }
     
     def _generate_search_queries(self, zip_code: str, criteria: Dict[str, Any]) -> Dict[str, str]:
-        """Generate platform-specific search queries for West LA apartments"""
+        """Generate platform-specific search queries for West LA apartments with DMA geo-targeting"""
         base_params = {
             "bedrooms": criteria.get("bedrooms", 2),
             "min_price": criteria.get("min_rent", 4400),
@@ -261,61 +298,94 @@ class ApartmentSearchAgent:
         }
         area_name = area_names.get(zip_code, "West Los Angeles")
         
+        # Los Angeles DMA geo-targeting parameters
+        la_dma_params = {
+            "location": "Los Angeles, CA",
+            "geo_radius": "25mi",
+            "region": "us-west",
+            "locale": "en-US",
+            "market": "los-angeles-dma"
+        }
+        
         queries = {}
         
-        # Enhanced Apartments.com query - focus on specific listings
+        # Enhanced Apartments.com query with geo-focus and amenity filters
         queries["apartments_com"] = (
             f"site:apartments.com \"{area_name}\" OR \"{zip_code}\" "
-            f"{base_params['bedrooms']} bedroom apartment rent "
-            f"${base_params['min_price']} ${base_params['max_price']} "
-            f"\"washer dryer\" \"air conditioning\" balcony available"
+            f"{base_params['bedrooms']} bedroom {base_params['bedrooms']}br apartment rent "
+            f"${base_params['min_price']}-${base_params['max_price']} "
+            f"\"washer dryer in unit\" \"air conditioning\" \"balcony\" OR \"patio\" OR \"terrace\" "
+            f"\"above first floor\" \"renovated\" \"updated\" \"modern\" "
+            f"available \"for rent\" -\"waitlist\" -\"coming soon\""
         )
         
-        # Enhanced Zillow query - target rental listings
+        # Enhanced Zillow query with rental filters and amenities
         queries["zillow"] = (
-            f"site:zillow.com \"{area_name}\" OR \"{zip_code}\" "
-            f"rental {base_params['bedrooms']}bd {base_params['bedrooms']} bedroom "
-            f"rent ${base_params['min_price']} ${base_params['max_price']} "
-            f"\"for rent\" apartment"
+            f"site:zillow.com/los-angeles-ca/rentals \"{area_name}\" OR \"{zip_code}\" "
+            f"{base_params['bedrooms']}bd 2ba rental apartment "
+            f"${base_params['min_price']}-${base_params['max_price']}/mo "
+            f"\"washer dryer hookup\" OR \"in unit laundry\" "
+            f"\"central air\" OR \"air conditioning\" "
+            f"\"balcony\" OR \"outdoor space\" "
+            f"\"for rent\" \"available now\" -\"pending\""
         )
         
-        # Enhanced Trulia query - specific unit searches
+        # Enhanced Trulia query with specific unit searches
         queries["trulia"] = (
-            f"site:trulia.com \"{area_name}\" OR \"{zip_code}\" "
-            f"{base_params['bedrooms']} bedroom apartment rent "
-            f"${base_params['min_price']} ${base_params['max_price']} "
-            f"\"for rent\" \"available now\""
+            f"site:trulia.com/for_rent/Los_Angeles,CA \"{area_name}\" OR \"{zip_code}\" "
+            f"{base_params['bedrooms']} bedroom 2 bath apartment "
+            f"${base_params['min_price']}-${base_params['max_price']} monthly "
+            f"\"washer dryer\" \"AC\" \"outdoor\" "
+            f"\"recently updated\" OR \"newly renovated\" "
+            f"\"for rent\" \"available\" -\"application pending\""
         )
         
-        # Enhanced HotPads query - map-based listings
+        # Enhanced HotPads query with map-based filtering
         queries["hotpads"] = (
-            f"site:hotpads.com \"{area_name}\" OR \"{zip_code}\" "
-            f"{base_params['bedrooms']} bed apartment rent "
-            f"${base_params['min_price']} ${base_params['max_price']} "
-            f"\"for rent\" available"
+            f"site:hotpads.com/los-angeles-ca \"{area_name}\" OR \"{zip_code}\" "
+            f"{base_params['bedrooms']} bed 2 bath apartment rental "
+            f"${base_params['min_price']}-${base_params['max_price']} "
+            f"\"w/d in unit\" \"air conditioned\" "
+            f"\"private outdoor\" \"2nd floor\" OR \"upper floor\" "
+            f"\"for rent\" \"move in ready\""
         )
         
-        # Enhanced Westside Rentals query - local specialist
+        # Enhanced Westside Rentals query - local LA specialist
         queries["westside_rentals"] = (
-            f"site:westsiderentals.com \"{area_name}\" OR \"{zip_code}\" "
-            f"{base_params['bedrooms']} bedroom luxury apartment "
-            f"${base_params['min_price']} ${base_params['max_price']} "
-            f"\"west los angeles\" \"westside\""
+            f"site:westsiderentals.com \"{area_name}\" \"{zip_code}\" "
+            f"{base_params['bedrooms']} bedroom 2 bathroom luxury apartment "
+            f"${base_params['min_price']}-${base_params['max_price']} "
+            f"\"washer dryer included\" \"central AC\" "
+            f"\"balcony\" OR \"patio\" \"upper unit\" "
+            f"\"west los angeles\" \"westside\" \"available\""
         )
         
-        # Add Realtor.com for comprehensive coverage
+        # Realtor.com with LA-specific parameters
         queries["realtor_com"] = (
-            f"site:realtor.com \"{area_name}\" OR \"{zip_code}\" "
-            f"{base_params['bedrooms']} bedroom apartment rental "
-            f"${base_params['min_price']} ${base_params['max_price']} "
-            f"\"for rent\""
+            f"site:realtor.com/apartments/Los-Angeles_CA \"{area_name}\" OR \"{zip_code}\" "
+            f"{base_params['bedrooms']}-bedroom 2-bathroom apartment rental "
+            f"${base_params['min_price']}-${base_params['max_price']}/month "
+            f"\"in-unit laundry\" \"air conditioning\" "
+            f"\"balcony\" \"second floor\" OR \"third floor\" "
+            f"\"for rent\" \"pet friendly\""
         )
         
-        # Add RentCafe for luxury apartments
+        # RentCafe for luxury apartments in LA
         queries["rentcafe"] = (
-            f"site:rentcafe.com \"{area_name}\" OR \"{zip_code}\" "
+            f"site:rentcafe.com/california/los-angeles-apartments \"{area_name}\" OR \"{zip_code}\" "
             f"{base_params['bedrooms']} bedroom luxury apartment "
-            f"${base_params['min_price']} ${base_params['max_price']}"
+            f"${base_params['min_price']}-${base_params['max_price']} "
+            f"\"full size washer dryer\" \"central air\" "
+            f"\"private balcony\" \"renovated\" \"available\""
+        )
+        
+        # Rent.com with specific filters
+        queries["rent_com"] = (
+            f"site:rent.com/california/los-angeles \"{area_name}\" \"{zip_code}\" "
+            f"{base_params['bedrooms']} bed 2 bath apartment "
+            f"${base_params['min_price']}-${base_params['max_price']} rent "
+            f"\"washer dryer connections\" \"AC\" "
+            f"\"patio balcony\" \"upper level\" \"updated\""
         )
         
         return queries
@@ -349,17 +419,21 @@ class ApartmentSearchAgent:
         apartment_indicators = [
             "bedroom", "bath", "apartment", "rent", "$", "sq ft", "sqft",
             "available", "lease", "studio", "1br", "2br", "3br", "unit",
-            "floor plan", "amenities", "contact", "tour", "apply"
+            "floor plan", "amenities", "contact", "tour", "apply",
+            "washer", "dryer", "balcony", "patio", "air conditioning", "ac"
         ]
         
-        # Specific patterns that indicate actual listings
+        # Specific patterns that indicate actual listings with your criteria
         listing_patterns = [
-            r'\$\d{3,5}(?:/month|/mo)?', # Price with month indicator
-            r'\d+\s*(?:bed|br|bedroom).*\d+\s*(?:bath|ba)', # Bed/bath combo
-            r'\d+\s*sq\s*ft', # Square footage
+            r'\$4[,.]?[4-9]\d{2}|\$5[,.]?[0-2]\d{2}', # Your price range specifically
+            r'2\s*(?:bed|br|bedroom).*(?:1\.5|2)\s*(?:bath|ba)', # 2br/1.5-2ba
+            r'\d{3,4}\s*sq\s*ft', # Square footage
             r'available\s+(?:now|immediately|\d+/\d+)', # Availability dates
             r'(?:call|contact|phone).*\d{3}.*\d{3}.*\d{4}', # Phone numbers
-            r'(?:schedule|book|virtual).*(?:tour|showing|visit)' # Tour scheduling
+            r'(?:schedule|book|virtual).*(?:tour|showing|visit)', # Tour scheduling
+            r'(?:washer.*dryer|w/d).*in.*unit', # In-unit laundry
+            r'(?:balcony|patio|terrace|outdoor\s+space)', # Outdoor space
+            r'(?:second|2nd|third|3rd|upper)\s+floor' # Above ground floor
         ]
         
         # URL patterns that suggest actual listings
@@ -386,16 +460,26 @@ class ApartmentSearchAgent:
         # Check for unit-specific URL patterns
         url_matches = sum(1 for pattern in unit_url_patterns if re.search(pattern, url_lower))
         
-        # Exclude search/browse pages
+        # Exclude search/browse pages and include your target areas
         search_excludes = [
             "search", "browse", "filter", "results", "find", "directory",
-            "sitemap", "category", "all-apartments", "listings-page"
+            "sitemap", "category", "all-apartments", "listings-page",
+            "neighborhood-guide", "city-guide", "cost-of-living"
         ]
+        
+        # Prioritize URLs containing your target areas
+        target_area_boost = any(area in url_lower for area in [
+            "mar-vista", "mar_vista", "90066",
+            "culver-city", "culver_city", "90230", "90232",
+            "palms", "90034"
+        ])
         
         is_search_page = any(exclude in url_lower for exclude in search_excludes)
         
-        # Enhanced scoring for actual listings
+        # Enhanced scoring for actual listings with area boost
         listing_score = indicator_count + (pattern_matches * 2) + (url_matches * 3)
+        if target_area_boost:
+            listing_score += 3
         
         # Must have strong indicators and not be a search page
         return listing_score >= 4 and not is_search_page
@@ -516,18 +600,21 @@ class ApartmentSearchAgent:
         return None
     
     def _extract_amenities(self, content: str) -> List[str]:
-        """Extract amenities from content"""
+        """Extract amenities from content with focus on required amenities"""
         amenity_keywords = {
-            "washer_dryer": ["washer", "dryer", "w/d", "laundry"],
-            "air_conditioning": ["air conditioning", "a/c", "ac", "central air"],
-            "outdoor_space": ["balcony", "patio", "deck", "outdoor", "terrace"],
-            "parking": ["parking", "garage", "carport"],
-            "pool": ["pool", "swimming"],
-            "gym": ["gym", "fitness", "exercise"],
+            "washer_dryer_in_unit": ["washer dryer in unit", "w/d in unit", "in-unit laundry", "laundry in unit"],
+            "air_conditioning": ["air conditioning", "a/c", "ac", "central air", "hvac", "climate control"],
+            "outdoor_space": ["balcony", "patio", "deck", "outdoor space", "terrace", "private outdoor"],
+            "above_ground_floor": ["second floor", "2nd floor", "third floor", "3rd floor", "upper floor", "top floor"],
+            "renovated": ["renovated", "remodeled", "updated", "upgraded", "modern", "contemporary"],
+            "natural_light": ["natural light", "bright", "sunny", "large windows", "floor to ceiling windows"],
+            "parking": ["parking", "garage", "carport", "assigned parking"],
+            "pool": ["pool", "swimming", "lap pool"],
+            "gym": ["gym", "fitness", "exercise", "workout room"],
             "dishwasher": ["dishwasher"],
-            "hardwood": ["hardwood", "wood floor"],
-            "granite": ["granite", "stone counter"],
-            "stainless": ["stainless steel", "stainless appliance"]
+            "hardwood": ["hardwood", "wood floor", "laminate"],
+            "granite": ["granite", "quartz", "stone counter"],
+            "stainless": ["stainless steel", "stainless appliance", "upgraded appliances"]
         }
         
         found_amenities = []
@@ -650,16 +737,17 @@ class ApartmentSearchAgent:
     
     async def search_apartments(self, zip_codes: List[str] = None) -> List[Dict[str, Any]]:
         """
-        Main method to search for apartments using DeepSearchAgent
+        Main method to search for apartments using DeepSearchAgent with LA DMA optimization
         
         Args:
             zip_codes: List of zip codes to search (uses config default if None)
             
         Returns:
-            List of verified apartment listings
+            List of verified apartment listings sorted by match score
         """
         if zip_codes is None:
-            zip_codes = self.search_criteria.get("target_zip_codes", ["90066", "90230", "90232", "90034"])
+            # Use priority-ordered zip codes
+            zip_codes = list(self.search_criteria.get("target_zip_codes", {}).keys())
         
         all_apartments = []
         
@@ -707,5 +795,14 @@ class ApartmentSearchAgent:
                 logger.error(f"Search failed for zip code {zip_code}: {e}")
                 continue
         
-        logger.info(f"Search complete. Found {len(all_apartments)} verified apartments.")
+        # Sort apartments by validation score and priority
+        zip_priority = {zip_code: idx for idx, zip_code in enumerate(zip_codes)}
+        all_apartments.sort(
+            key=lambda x: (
+                -x["validation"]["percentage"],  # Higher score first
+                zip_priority.get(x["search_metadata"]["zip_code"], 999)  # Priority zip codes first
+            )
+        )
+        
+        logger.info(f"Search complete. Found {len(all_apartments)} verified apartments meeting criteria.")
         return all_apartments
