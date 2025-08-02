@@ -244,6 +244,7 @@ export class ApartmentSearchEngine {
     }
 
     generateListingUrl(buildingType, areaName, zipCode, price) {
+        // Use more reliable, simpler search URLs that are less likely to break
         const sources = [
             {
                 name: 'Apartments.com',
@@ -251,56 +252,51 @@ export class ApartmentSearchEngine {
                 template: (_building, area, zip, price) => {
                     const minPrice = Math.floor(price * 0.9);
                     const maxPrice = Math.floor(price * 1.1);
-                    const cityState = `${area.replace(/\s+/g, '-')}-ca`;
-                    return `${cityState}/${zip}/?bb=${minPrice}-${maxPrice}&t=apartments`;
+                    // Use general city search page
+                    return `${area.toLowerCase().replace(/\s+/g, '-')}-ca/?bb=${minPrice}-${maxPrice}`;
                 }
             },
             {
                 name: 'Zillow',
                 baseUrl: 'https://www.zillow.com',
                 template: (_building, area, zip, price) => {
-                    const minPrice = Math.floor(price * 0.9);
-                    const maxPrice = Math.floor(price * 1.1);
-                    return `homes/for_rent/${zip}_rb/?searchQueryState=%7B%22pagination%22%3A%7B%7D%2C%22usersSearchTerm%22%3A%22${zip}%22%2C%22mapBounds%22%3A%7B%7D%2C%22regionSelection%22%3A%5B%7B%22regionId%22%3A${zip}%2C%22regionType%22%3A7%7D%5D%2C%22isMapVisible%22%3Atrue%2C%22filterState%22%3A%7B%22price%22%3A%7B%22min%22%3A${minPrice}%2C%22max%22%3A${maxPrice}%7D%2C%22beds%22%3A%7B%22min%22%3A2%7D%2C%22baths%22%3A%7B%22min%22%3A1%7D%7D%2C%22isListVisible%22%3Atrue%7D`;
+                    // Use simpler zip code search
+                    return `homes/for_rent/${zip}_rb/`;
                 }
             },
             {
                 name: 'Trulia',
                 baseUrl: 'https://www.trulia.com',
-                template: (_building, area, zip, price) => {
-                    const minPrice = Math.floor(price * 0.9);
-                    const maxPrice = Math.floor(price * 1.1);
+                template: (_building, area, zip, _price) => {
+                    // Use basic area search
                     const citySlug = area.toLowerCase().replace(/\s+/g, '_');
-                    return `for_rent/${citySlug},ca/${zip}_p/2p_beds/${minPrice}-${maxPrice}_price/`;
+                    return `for_rent/${citySlug},ca/${zip}_p/`;
                 }
             },
             {
                 name: 'HotPads',
                 baseUrl: 'https://hotpads.com',
-                template: (_building, area, zip, price) => {
-                    const minPrice = Math.floor(price * 0.9);
-                    const maxPrice = Math.floor(price * 1.1);
+                template: (_building, area, zip, _price) => {
+                    // Use basic city search
                     const citySlug = area.toLowerCase().replace(/\s+/g, '-');
-                    return `${citySlug}-ca-${zip}/apartments-for-rent?price=${minPrice}-${maxPrice}&beds=2`;
+                    return `${citySlug}-ca/apartments-for-rent`;
                 }
             },
             {
                 name: 'Westside Rentals',
                 baseUrl: 'https://www.westsiderentals.com',
-                template: (_building, area, zip, price) => {
-                    const minPrice = Math.floor(price * 0.9);
-                    const maxPrice = Math.floor(price * 1.1);
-                    return `listingsearch?search_form%5Bcity%5D=${encodeURIComponent(area)}&search_form%5Bzipcode%5D=${zip}&search_form%5Bmin_rent%5D=${minPrice}&search_form%5Bmax_rent%5D=${maxPrice}&search_form%5Bbedrooms%5D=2`;
+                template: (_building, area, zip, _price) => {
+                    // Use basic search form
+                    return `listingsearch?search_form%5Bcity%5D=${encodeURIComponent(area)}`;
                 }
             },
             {
                 name: 'Realtor.com',
                 baseUrl: 'https://www.realtor.com',
-                template: (_building, area, zip, price) => {
-                    const minPrice = Math.floor(price * 0.9);
-                    const maxPrice = Math.floor(price * 1.1);
+                template: (_building, area, zip, _price) => {
+                    // Use basic apartments search
                     const citySlug = area.toLowerCase().replace(/\s+/g, '-');
-                    return `apartments-for-rent/${citySlug}-ca-${zip}?price-min=${minPrice}&price-max=${maxPrice}&beds-min=2`;
+                    return `apartments-for-rent/${citySlug}-ca/`;
                 }
             }
         ];
