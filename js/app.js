@@ -343,13 +343,14 @@ export class ApartmentFinderApp {
                             ${this.renderBackupOptions(apartment)}
                         </div>
                         <div class="listing-info">
-                            <span class="listing-source">Primary source: ${apartment.source}</span>
+                            <span class="listing-source">📍 Live data from: <strong>${apartment.source}</strong></span>
                             ${apartment.urlHealthSummary ? `
                                 <div class="link-health-indicator ${apartment.urlHealthSummary.className}">
                                     <i class="${apartment.urlHealthSummary.icon}"></i>
                                     <span class="health-tooltip">${apartment.urlHealthSummary.message}</span>
                                 </div>
                             ` : ''}
+                            <small class="data-freshness">Updated: ${this.formatDatePosted(apartment.datePosted)}</small>
                         </div>
                     </div>
                 </div>
@@ -802,7 +803,6 @@ export class ApartmentFinderApp {
 
     toggleAdditionalBackups(button) {
         const additionalBackups = button.parentElement.querySelector('.backup-buttons.additional');
-        const chevron = button.querySelector('i');
         
         if (additionalBackups) {
             const isVisible = additionalBackups.style.display !== 'none';
@@ -814,6 +814,25 @@ export class ApartmentFinderApp {
             } else {
                 button.innerHTML = `<i class="fas fa-chevron-up"></i> Hide Additional Options`;
             }
+        }
+    }
+
+    formatDatePosted(dateString) {
+        if (!dateString) return 'Unknown';
+        
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffTime = Math.abs(now - date);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays === 1) {
+            return 'Today';
+        } else if (diffDays === 2) {
+            return 'Yesterday';
+        } else if (diffDays <= 7) {
+            return `${diffDays - 1} days ago`;
+        } else {
+            return date.toLocaleDateString();
         }
     }
 }

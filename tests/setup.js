@@ -39,8 +39,8 @@ beforeAll(() => {
     'recentListings': { style: { display: 'none' } },
     'noResults': { style: { display: 'none' } },
     'toastContainer': { 
-      appendChild: (element) => {},
-      removeChild: (element) => {},
+      appendChild: () => {},
+      removeChild: () => {},
       querySelector: () => null
     },
     'apartmentModal': { style: { display: 'none' }, classList: { add: () => {}, remove: () => {} } },
@@ -85,7 +85,7 @@ beforeAll(() => {
       };
     },
     querySelectorAll: () => [],
-    createElement: (tag) => ({
+    createElement: () => ({
       className: '',
       innerHTML: '',
       setAttribute: () => {},
