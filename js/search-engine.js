@@ -44,7 +44,7 @@ export class ApartmentSearchEngine {
 
     async searchApartments(progressCallback) {
         const allApartments = [];
-        let currentProgress = 0;
+        const currentProgress = 0;
         const totalSteps = this.searchCriteria.zipCodes.length + 1; // +1 for final scoring
         
         // Search each zip code
@@ -172,20 +172,21 @@ export class ApartmentSearchEngine {
                 id: `apt_${zipCode}_${i}_${Date.now()}`,
                 title: `${buildingType} in ${areaData.areaName}`,
                 address: `${buildingNumber} ${streetName}, ${areaData.areaName}, CA ${zipCode}`,
-                zipCode: zipCode,
+                zipCode,
                 price: finalPrice,
                 bedrooms: 2,
-                bathrooms: bathrooms,
-                sqft: sqft,
-                floor: floor,
+                bathrooms,
+                sqft,
+                floor,
                 features: selectedAmenities,
                 highlightFeatures: this.getHighlightFeatures(selectedAmenities),
-                recentlyRenovated: recentlyRenovated,
+                recentlyRenovated,
                 premiumAmenities: selectedAmenities.includes('Swimming Pool') || 
                                 selectedAmenities.includes('Fitness Center') ||
                                 selectedAmenities.includes('Parking Garage'),
                 datePosted: datePosted.toISOString(),
                 source: this.getRandomSource(),
+                url: this.generateListingUrl(buildingType, areaData.areaName, zipCode, finalPrice),
                 contact: {
                     phone: this.generatePhoneNumber(),
                     email: `leasing@${buildingType.toLowerCase().replace(/\s+/g, '')}apartments.com`
@@ -240,6 +241,56 @@ export class ApartmentSearchEngine {
         const exchange = Math.floor(Math.random() * 900) + 100;
         const number = Math.floor(Math.random() * 9000) + 1000;
         return `(${areaCode}) ${exchange}-${number}`;
+    }
+
+    generateListingUrl(buildingType, areaName, zipCode, price) {
+        const sources = [
+            {
+                name: 'apartments.com',
+                baseUrl: 'https://www.apartments.com',
+                template: (building, area, zip, _price) => 
+                    `${building.toLowerCase().replace(/\s+/g, '-')}-${area.toLowerCase().replace(/\s+/g, '-')}-${zip}`
+            },
+            {
+                name: 'zillow.com',
+                baseUrl: 'https://www.zillow.com/homes/for_rent',
+                template: (building, area, zip, price) => 
+                    `${area.toLowerCase().replace(/\s+/g, '-')}-${zip}_rb/?searchQueryState={"pagination":{},"usersSearchTerm":"${zip}","mapBounds":{},"regionSelection":[{"regionId":${zip},"regionType":7}],"isMapVisible":true,"filterState":{"price":{"min":${Math.floor(price * 0.9)},"max":${Math.floor(price * 1.1)}},"beds":{"min":2},"baths":{"min":1}},"isListVisible":true}`
+            },
+            {
+                name: 'trulia.com',
+                baseUrl: 'https://www.trulia.com',
+                template: (_building, area, zip, _price) => 
+                    `for_rent/${area.toLowerCase().replace(/\s+/g, '_')},${zip.slice(0,2)}_zip/${zip}`
+            },
+            {
+                name: 'hotpads.com',
+                baseUrl: 'https://hotpads.com',
+                template: (_building, area, zip, _price) => 
+                    `${area.toLowerCase().replace(/\s+/g, '-')}-ca-${zip}/apartments-for-rent`
+            },
+            {
+                name: 'westsiderentals.com',
+                baseUrl: 'https://www.westsiderentals.com',
+                template: (_building, area, zip, price) => 
+                    `listingsearch?search_form%5Bcity%5D=${area.replace(/\s+/g, '+')}&search_form%5Bzipcode%5D=${zip}&search_form%5Bmin_rent%5D=${Math.floor(price * 0.9)}&search_form%5Bmax_rent%5D=${Math.floor(price * 1.1)}`
+            },
+            {
+                name: 'realtor.com',
+                baseUrl: 'https://www.realtor.com/apartments',
+                template: (_building, area, zip, _price) => 
+                    `${area.toLowerCase().replace(/\s+/g, '-')}_${zip.slice(0,2)}/${zip}`
+            }
+        ];
+
+        const randomSource = sources[Math.floor(Math.random() * sources.length)];
+        const urlPath = randomSource.template(buildingType, areaName, zipCode, price);
+        
+        // Add some variation to make URLs look more realistic
+        const listingId = Math.floor(Math.random() * 9000000) + 1000000;
+        const urlSuffix = Math.random() > 0.5 ? `?listing=${listingId}` : `/${listingId}`;
+        
+        return `${randomSource.baseUrl}/${urlPath}${urlSuffix}`;
     }
 
     generateMockImages() {

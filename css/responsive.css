@@ -163,6 +163,22 @@
         gap: 0.5rem;
     }
     
+    .card-actions {
+        flex-direction: column;
+        gap: 0.8rem;
+        align-items: stretch;
+    }
+    
+    .view-listing-btn {
+        width: 100%;
+        justify-content: center;
+        text-align: center;
+    }
+    
+    .listing-source {
+        text-align: center;
+    }
+    
     .modal-content {
         margin: 0.5rem;
         max-width: calc(100% - 1rem);

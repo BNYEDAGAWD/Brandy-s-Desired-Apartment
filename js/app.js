@@ -1,6 +1,7 @@
 import { ApartmentSearchEngine } from './search-engine.js';
 import { ApartmentScoring } from './scoring.js';
 import { UIComponents } from './ui-components.js';
+import { lazyLoader } from './lazy-loading.js';
 
 export class ApartmentFinderApp {
     constructor() {
@@ -243,6 +244,11 @@ export class ApartmentFinderApp {
                 this.showApartmentDetails(apartment);
             });
         });
+
+        // Initialize lazy loading for new images
+        setTimeout(() => {
+            lazyLoader.refresh();
+        }, 100);
     }
 
     createApartmentCard(apartment, isRecent = false) {
@@ -258,10 +264,12 @@ export class ApartmentFinderApp {
         return `
             <div class="apartment-card fade-in" data-apartment-id="${apartment.id}">
                 <div class="card-image">
-                    ${apartment.images && apartment.images.length > 0 ? 
-                        `<img src="${apartment.images[0]}" alt="${apartment.title}" onerror="this.style.display='none'">` :
-                        '<i class="fas fa-image">No Image Available</i>'
-                    }
+                    <div class="image-container">
+                        ${apartment.images && apartment.images.length > 0 ? 
+                            `<img class="property-image" data-src="${apartment.images[0]}" alt="${apartment.title}" onerror="this.classList.add('lazy-error')">` :
+                            '<div class="no-image-placeholder"><i class="fas fa-image"></i><span>No Image Available</span></div>'
+                        }
+                    </div>
                     <div class="score-badge ${scoreClass}">${apartment.score}</div>
                     ${bookmarked ? '<div class="bookmark-indicator"><i class="fas fa-bookmark"></i></div>' : ''}
                 </div>
@@ -300,6 +308,14 @@ export class ApartmentFinderApp {
                     </div>
                     
                     <div class="card-price">$${apartment.price.toLocaleString()}/month</div>
+                    
+                    <div class="card-actions">
+                        <a href="${apartment.url}" target="_blank" rel="noopener noreferrer" class="view-listing-btn" onclick="event.stopPropagation();">
+                            <i class="fas fa-external-link-alt"></i>
+                            View Listing
+                        </a>
+                        <span class="listing-source">via ${apartment.source}</span>
+                    </div>
                 </div>
             </div>
         `;
@@ -318,7 +334,15 @@ export class ApartmentFinderApp {
         
         const imageGallery = apartment.images && apartment.images.length > 0 ? 
             `<div class="image-gallery">
-                ${apartment.images.map(img => `<img src="${img}" alt="Apartment image" style="width: 100%; margin-bottom: 1rem; border-radius: 8px;">`).join('')}
+                ${apartment.images.map((img, index) => 
+                    `<div class="image-container" style="margin-bottom: 1rem;">
+                        <img class="property-image" 
+                             ${index === 0 ? `src="${img}"` : `data-src="${img}"`} 
+                             alt="Apartment image" 
+                             style="width: 100%; border-radius: 8px;"
+                             onerror="this.classList.add('lazy-error')">
+                    </div>`
+                ).join('')}
             </div>` : 
             '<div class="no-image">No images available</div>';
         
@@ -384,6 +408,17 @@ export class ApartmentFinderApp {
                     </div>
                 ` : ''}
                 
+                <div class="listing-url-section">
+                    <h4><i class="fas fa-external-link-alt"></i> View Full Listing</h4>
+                    <div class="url-container">
+                        <a href="${apartment.url}" target="_blank" rel="noopener noreferrer" class="modal-view-listing-btn">
+                            <i class="fas fa-external-link-alt"></i>
+                            View on ${apartment.source}
+                        </a>
+                        <p class="url-disclaimer">Opens in a new tab. Listing provided by ${apartment.source}.</p>
+                    </div>
+                </div>
+                
                 <div class="contact-section">
                     <h4><i class="fas fa-phone"></i> Contact Information</h4>
                     <p><strong>Phone:</strong> ${apartment.contact?.phone || 'Not available'}</p>
@@ -404,7 +439,11 @@ export class ApartmentFinderApp {
         
         // Show modal
         modal.style.display = 'flex';
-        setTimeout(() => modal.classList.add('show'), 10);
+        setTimeout(() => {
+            modal.classList.add('show');
+            // Initialize lazy loading for modal images
+            lazyLoader.refresh();
+        }, 10);
     }
 
     closeModal() {
