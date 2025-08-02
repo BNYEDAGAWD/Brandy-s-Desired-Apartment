@@ -1,0 +1,57 @@
+# DeepSearchAgent Configuration
+[agents.common]
+model = "claude-3-5-sonnet-20241022"
+max_iterations = 10
+enable_logging = true
+log_level = "INFO"
+cli_streaming_enabled = false
+
+[agents.react]
+enable_streaming = false
+temperature = 0.1
+max_tokens = 4000
+prompt_template = "react_prompts"
+
+[agents.codact]
+enable_streaming = false
+temperature = 0.1
+max_tokens = 4000
+prompt_template = "codact_prompts"
+
+[search_engines]
+default_engine = "serper"
+
+[search_engines.serper]
+enabled = true
+api_key = ""  # Set in .env file
+base_url = "https://google.serper.dev"
+max_results = 10
+
+[ranking]
+model = "all-MiniLM-L6-v2"
+top_k = 5
+rerank_enabled = true
+
+[chunking]
+chunk_size = 1000
+chunk_overlap = 200
+strategy = "recursive"
+
+[apartment_search]
+# West Los Angeles specific search parameters
+target_zip_codes = ["90066", "90230", "90232", "90034"]
+min_rent = 4400
+max_rent = 5200
+bedrooms = 2
+min_bathrooms = 1.5
+max_bathrooms = 2.0
+required_amenities = ["washer_dryer", "air_conditioning", "outdoor_space", "above_ground_floor"]
+preferred_features = ["recently_renovated", "modern_interior", "natural_light"]
+
+[apartment_search.sources]
+apartments_com = true
+zillow = true
+trulia = true
+hotpads = true
+westside_rentals = true
+craigslist = false  # Disabled by default due to inconsistent data

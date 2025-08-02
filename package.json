@@ -24,7 +24,14 @@
     "security:audit": "npm audit --audit-level=moderate",
     "security:fix": "npm audit fix",
     "deps:update": "npm update && npm audit fix",
-    "ci:full": "npm run lint:check && npm run typecheck && npm run test && npm run build"
+    "ci:full": "npm run lint:check && npm run typecheck && npm run test && npm run build",
+    "backend:install": "python3 -m pip install fastapi uvicorn pydantic python-dotenv httpx requests",
+    "backend:setup": "cp config.template.toml config.toml && cp .env.example .env",
+    "backend:dev": "python3 start_deepsearch.py",
+    "backend:test": "python3 test_api_keys.py",
+    "fullstack:dev": "concurrently \"npm run backend:dev\" \"npm run dev\"",
+    "fullstack:setup": "npm install && npm run backend:install && npm run backend:setup",
+    "deepsearch:start": "python3 start_deepsearch.py"
   },
   "repository": {
     "type": "git",
@@ -87,6 +94,7 @@
     "not ie 11"
   ],
   "dependencies": {
+    "concurrently": "^8.2.2",
     "node-fetch": "^3.3.2"
   }
 }

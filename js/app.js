@@ -1,4 +1,4 @@
-import { ApartmentSearchEngine } from './search-engine.js';
+import { RealApartmentSearchEngine } from './real-search-engine.js';
 import { ApartmentScoring } from './scoring.js';
 import { lazyLoader } from './lazy-loading.js';
 import { linkHealthMonitor } from './link-health-monitor.js';
@@ -82,9 +82,13 @@ export class ApartmentFinderApp {
         this.showLoadingState();
         
         try {
-            // Initialize search engine and scoring
-            const searchEngine = new ApartmentSearchEngine();
+            // Initialize real search engine and scoring
+            const searchEngine = new RealApartmentSearchEngine();
             const scorer = new ApartmentScoring();
+            
+            // Show search engine status
+            const status = searchEngine.getStatus();
+            console.log('🔧 Search Engine Status:', status);
             
             // Start search with progress updates
             const apartments = await searchEngine.searchApartments((progress) => {
@@ -257,25 +261,15 @@ export class ApartmentFinderApp {
         document.querySelectorAll('.show-backups-btn').forEach(button => {
             button.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const backupLinks = button.parentElement.querySelector('.backup-links');
-                const chevron = button.querySelector('i');
-                
-                if (backupLinks) {
-                    const isVisible = backupLinks.style.display !== 'none';
-                    backupLinks.style.display = isVisible ? 'none' : 'block';
-                    
-                    // Update button text and icon
-                    const buttonText = button.childNodes[1]; // Text node after icon
-                    if (isVisible) {
-                        buttonText.textContent = ' More Options';
-                        chevron.className = 'fas fa-chevron-down';
-                        button.classList.remove('expanded');
-                    } else {
-                        buttonText.textContent = ' Hide Alternatives';
-                        chevron.className = 'fas fa-chevron-up';
-                        button.classList.add('expanded');
-                    }
-                }
+                this.toggleBackupLinks(button);
+            });
+        });
+
+        // Add modal backup toggle functionality
+        document.querySelectorAll('.expand-more-backups').forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.toggleAdditionalBackups(button);
             });
         });
 
@@ -424,7 +418,7 @@ export class ApartmentFinderApp {
             
             backupHtml += `
                 <button class="show-backups-btn ${showBackupsByDefault ? 'expanded' : ''}" 
-                        onclick="event.stopPropagation(); this.toggleBackupLinks();">
+                        onclick="event.stopPropagation();">
                     <i class="fas fa-chevron-${chevronDirection}"></i>
                     ${buttonText}
                 </button>
@@ -762,7 +756,7 @@ export class ApartmentFinderApp {
         if (additionalBackups.length > 0) {
             backupHtml += `
                 <div class="additional-backups">
-                    <button class="expand-more-backups" onclick="this.toggleAdditionalBackups();">
+                    <button class="expand-more-backups" onclick="event.stopPropagation();">
                         <i class="fas fa-chevron-down"></i>
                         Show More Options (${additionalBackups.length})
                     </button>
@@ -782,6 +776,45 @@ export class ApartmentFinderApp {
 
         backupHtml += '</div>';
         return backupHtml;
+    }
+
+    toggleBackupLinks(button) {
+        const backupLinks = button.parentElement.querySelector('.backup-links');
+        const chevron = button.querySelector('i');
+        
+        if (backupLinks) {
+            const isVisible = backupLinks.style.display !== 'none';
+            backupLinks.style.display = isVisible ? 'none' : 'block';
+            
+            // Update button text and icon
+            const buttonText = button.childNodes[1]; // Text node after icon
+            if (isVisible) {
+                buttonText.textContent = ' More Options';
+                chevron.className = 'fas fa-chevron-down';
+                button.classList.remove('expanded');
+            } else {
+                buttonText.textContent = ' Hide Alternatives';
+                chevron.className = 'fas fa-chevron-up';
+                button.classList.add('expanded');
+            }
+        }
+    }
+
+    toggleAdditionalBackups(button) {
+        const additionalBackups = button.parentElement.querySelector('.backup-buttons.additional');
+        const chevron = button.querySelector('i');
+        
+        if (additionalBackups) {
+            const isVisible = additionalBackups.style.display !== 'none';
+            additionalBackups.style.display = isVisible ? 'none' : 'block';
+            
+            // Update button icon and text
+            if (isVisible) {
+                button.innerHTML = `<i class="fas fa-chevron-down"></i> Show More Options (${additionalBackups.children.length})`;
+            } else {
+                button.innerHTML = `<i class="fas fa-chevron-up"></i> Hide Additional Options`;
+            }
+        }
     }
 }
 

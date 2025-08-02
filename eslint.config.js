@@ -41,6 +41,8 @@ export default [
         CustomEvent: 'readonly',
         Event: 'readonly',
         EventTarget: 'readonly',
+        AbortController: 'readonly',
+        AbortSignal: 'readonly',
         
         // Node.js globals
         process: 'readonly',
@@ -121,7 +123,9 @@ export default [
         ResizeObserver: 'readonly',
         CustomEvent: 'readonly',
         Event: 'readonly',
-        EventTarget: 'readonly'
+        EventTarget: 'readonly',
+        AbortController: 'readonly',
+        AbortSignal: 'readonly'
       }
     }
   },

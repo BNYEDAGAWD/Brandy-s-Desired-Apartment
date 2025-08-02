@@ -108,11 +108,11 @@ class ApartmentFinderApp {
     this.showToast('Results exported successfully!', 'success');
   }
 
-  showToast(message, type) {
+  showToast() {
     // Mock implementation
   }
 
-  updateProgress(progress) {
+  updateProgress() {
     // Mock implementation
   }
 }

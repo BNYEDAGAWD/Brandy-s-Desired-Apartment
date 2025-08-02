@@ -1,1 +1,39 @@
-node_modules
+# Environment files
+.env
+.env.local
+.env.production
+
+# API Keys and Secrets
+config.toml
+*.key
+*.pem
+
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+
+# Build outputs (keep dist/ for GitHub Pages)
+.vite/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Cache
+.cache/
+.temp/

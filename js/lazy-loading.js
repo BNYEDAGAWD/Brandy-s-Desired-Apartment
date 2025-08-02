@@ -173,7 +173,7 @@ export class LazyImageLoader {
                 this.removeLoadingIndicator(img);
                 this.loadedImages.add(img);
                 return;
-            } catch (retryError) {
+            } catch {
                 console.warn(`Retry ${currentRetries + 1} failed for image:`, originalSrc);
             }
         }

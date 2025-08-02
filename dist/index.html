@@ -5,19 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Brandy's Desired Apartment Finder</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-  <script type="module" crossorigin src="/Brandy-s-Desired-Apartment/assets/index-C238gRQT.js"></script>
-  <link rel="stylesheet" crossorigin href="/Brandy-s-Desired-Apartment/assets/index-DO5VN52Y.css">
+  <script type="module" crossorigin src="/Brandy-s-Desired-Apartment/assets/index-DfhSF05y.js"></script>
+  <link rel="stylesheet" crossorigin href="/Brandy-s-Desired-Apartment/assets/index-hLIlx39u.css">
   <script type="module">import.meta.url;import("_").catch(()=>1);(async function*(){})().next();window.__vite_is_modern_browser=true</script>
   <script type="module">!function(){if(window.__vite_is_modern_browser)return;console.warn("vite: loading legacy chunks, syntax error above and the same error below should be ignored");var e=document.getElementById("vite-legacy-polyfill"),n=document.createElement("script");n.src=e.src,n.onload=function(){System.import(document.getElementById('vite-legacy-entry').getAttribute('data-src'))},document.body.appendChild(n)}();</script>
 <link rel="manifest" href="/Brandy-s-Desired-Apartment/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/Brandy-s-Desired-Apartment/registerSW.js"></script></head>
 <body>
     <header class="header">
         <div class="container">
-            <h1 class="header-title">
-                <i class="fas fa-home"></i>
-                Brandy's Desired Apartment Finder
-            </h1>
-            <p class="header-subtitle">West Los Angeles Luxury Apartment Search</p>
+            <h1 class="header-title">Brandy's Apartment Finder</h1>
+            <p class="header-subtitle">West Los Angeles Luxury Search</p>
         </div>
     </header>
 
@@ -35,35 +32,28 @@
                     <div class="search-criteria">
                         <div class="criteria-grid">
                             <div class="criteria-item">
-                                <i class="fas fa-bed"></i>
                                 <span>2 Bedrooms</span>
                             </div>
                             <div class="criteria-item">
-                                <i class="fas fa-bath"></i>
                                 <span>1.5-2 Bathrooms</span>
                             </div>
                             <div class="criteria-item">
-                                <i class="fas fa-building"></i>
                                 <span>Above Ground Floor</span>
                             </div>
                             <div class="criteria-item">
-                                <i class="fas fa-wind"></i>
-                                <span>A/C + Laundry</span>
+                                <span>Air Conditioning</span>
                             </div>
                             <div class="criteria-item">
-                                <i class="fas fa-tree"></i>
                                 <span>Outdoor Space</span>
                             </div>
                             <div class="criteria-item">
-                                <i class="fas fa-sparkles"></i>
-                                <span>Recently Renovated</span>
+                                <span>In-Unit Laundry</span>
                             </div>
                         </div>
                     </div>
 
                     <button id="searchBtn" class="search-btn">
-                        <i class="fas fa-search"></i>
-                        Start Apartment Search
+                        Search Apartments
                     </button>
 
                     <div id="loadingIndicator" class="loading-indicator" style="display: none;">
@@ -82,9 +72,9 @@
             <!-- Filter Panel -->
             <section id="filterPanel" class="filter-panel" style="display: none;">
                 <div class="filter-header">
-                    <h3><i class="fas fa-filter"></i> Refine Results</h3>
+                    <h3>Filters</h3>
                     <button id="toggleFilters" class="toggle-btn">
-                        <i class="fas fa-chevron-down"></i>
+                        ↓
                     </button>
                 </div>
                 <div class="filter-content">
@@ -120,15 +110,14 @@
                     <div class="results-stats">
                         <span id="resultsCount">0 apartments found</span>
                         <button id="exportBtn" class="export-btn">
-                            <i class="fas fa-download"></i>
-                            Export Results
+                            Export
                         </button>
                     </div>
                 </div>
 
                 <!-- Recent Listings Highlight -->
                 <div id="recentListings" class="recent-listings" style="display: none;">
-                    <h3><i class="fas fa-clock"></i> New This Week</h3>
+                    <h3>New This Week</h3>
                     <div id="recentResults" class="results-grid recent-grid"></div>
                 </div>
 
@@ -140,9 +129,8 @@
 
                 <!-- No Results Message -->
                 <div id="noResults" class="no-results" style="display: none;">
-                    <i class="fas fa-search"></i>
                     <h3>No apartments found</h3>
-                    <p>Try adjusting your search criteria or check back later for new listings.</p>
+                    <p>Try adjusting search criteria or check back later.</p>
                 </div>
             </section>
         </div>
@@ -154,20 +142,15 @@
             <div class="modal-header">
                 <h2 id="modalTitle">Apartment Details</h2>
                 <button class="modal-close" id="closeModal">
-                    <i class="fas fa-times"></i>
+                    ×
                 </button>
             </div>
             <div class="modal-body" id="modalBody">
                 <!-- Dynamic content will be inserted here -->
             </div>
             <div class="modal-footer">
-                <button id="bookmarkBtn" class="bookmark-btn">
-                    <i class="fas fa-bookmark"></i>
+                <button id="bookmarkBtn" class="btn-secondary">
                     Bookmark
-                </button>
-                <button id="contactBtn" class="contact-btn">
-                    <i class="fas fa-phone"></i>
-                    Contact
                 </button>
             </div>
         </div>
@@ -179,6 +162,6 @@
     <!-- Scripts -->
   <script nomodule>!function(){var e=document,t=e.createElement("script");if(!("noModule"in t)&&"onbeforeload"in t){var n=!1;e.addEventListener("beforeload",(function(e){if(e.target===t)n=!0;else if(!e.target.hasAttribute("nomodule")||!n)return;e.preventDefault()}),!0),t.type="module",t.src=".",e.head.appendChild(t),t.remove()}}();</script>
   <script nomodule crossorigin id="vite-legacy-polyfill" src="/Brandy-s-Desired-Apartment/assets/polyfills-legacy-Ct8uSP4M.js"></script>
-  <script nomodule crossorigin id="vite-legacy-entry" data-src="/Brandy-s-Desired-Apartment/assets/index-legacy-D0ZGhY5m.js">System.import(document.getElementById('vite-legacy-entry').getAttribute('data-src'))</script>
+  <script nomodule crossorigin id="vite-legacy-entry" data-src="/Brandy-s-Desired-Apartment/assets/index-legacy-CDcszc7Z.js">System.import(document.getElementById('vite-legacy-entry').getAttribute('data-src'))</script>
 </body>
 </html>

@@ -1,6 +1,6 @@
 # 🏠 Brandy's Desired Apartment Finder
 
-A sophisticated web application for finding luxury rental apartments in West Los Angeles with automated search capabilities, intelligent ranking, and Claude AI integration.
+A sophisticated web application for finding luxury rental apartments in West Los Angeles powered by **DeepSearchAgent** - an intelligent AI system that performs real apartment searches and delivers verified, high-quality listings.
 
 [![Deploy to GitHub Pages](https://github.com/BNYEDAGAWD/Brandy-s-Desired-Apartment/actions/workflows/deploy.yml/badge.svg)](https://github.com/BNYEDAGAWD/Brandy-s-Desired-Apartment/actions/workflows/deploy.yml)
 [![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen)](https://bnyedagawd.github.io/Brandy-s-Desired-Apartment/)
@@ -25,11 +25,12 @@ This application helps find rental apartments in West Los Angeles that match spe
 - **Quality Preferences**: Prioritizes recent renovations, natural light, modern amenities
 - **Location Priority**: Ranks by zip code preference (Mar Vista > Culver City > Palms)
 
-### 🤖 **Claude AI Integration**
-- **Enhanced Descriptions**: AI-powered apartment description improvements
-- **Market Insights**: Intelligent analysis of search results and trends
-- **Smart Filtering**: Natural language queries for advanced filtering
-- **Personalized Recommendations**: AI-driven suggestions based on preferences
+### 🤖 **DeepSearchAgent Integration**
+- **Real Web Searches**: Live searches across apartments.com, zillow.com, trulia.com, and more
+- **AI-Powered Extraction**: Intelligent parsing of apartment details from listing pages
+- **Verified URLs**: All listings link to actual apartment pages, not search results
+- **Smart Validation**: AI validates apartments against Brandy's specific criteria
+- **Fallback Mode**: Enhanced demo data when real search backend is unavailable
 
 ### 📱 **Responsive Design**
 - **Mobile-First**: Optimized for all device sizes
@@ -39,11 +40,16 @@ This application helps find rental apartments in West Los Angeles that match spe
 
 ## 🏗️ Technical Architecture
 
-### Frontend Stack
-- **Pure JavaScript ES6+**: No framework dependencies
-- **CSS Grid & Flexbox**: Modern responsive layout
-- **Web APIs**: LocalStorage, Fetch, Intersection Observer
-- **Progressive Web App**: Service worker ready
+### Hybrid Architecture
+- **Frontend**: JavaScript (Vite) with minimalistic emerald/sapphire UI
+- **Backend**: Python DeepSearchAgent for real apartment searches
+- **Integration**: RESTful API communication with intelligent fallback
+
+### Technology Stack
+- **Frontend**: Pure JavaScript ES6+, CSS Grid & Flexbox, Web APIs
+- **Backend**: Python, FastAPI, DeepSearchAgent (ReAct framework)
+- **AI**: Anthropic Claude, Serper Google Search API
+- **Deployment**: GitHub Pages (frontend), Railway/Render (backend)
 
 ### Search Criteria
 ```javascript
@@ -93,27 +99,34 @@ The application uses a sophisticated 100-point scoring algorithm:
 4. **Apply Filters**: Refine results using the filter panel
 5. **View Details**: Click any apartment card for full information
 
-### Local Development
+### Full Setup (Real Search)
 ```bash
-# Clone the repository
+# Clone and setup everything
 git clone https://github.com/BNYEDAGAWD/Brandy-s-Desired-Apartment.git
 cd Brandy-s-Desired-Apartment
 
-# Install development dependencies (optional)
-npm install
+# Install all dependencies and setup configuration
+npm run fullstack:setup
 
-# Start local server
-npm run start
-# OR use Python
-npm run serve
-# OR use any static file server
-python3 -m http.server 8000
+# Configure API keys (see DEEPSEARCH_SETUP.md)
+cp .env.example .env
+nano .env
+
+# Run both frontend and backend
+npm run fullstack:dev
 ```
 
-### Claude AI Setup (Optional)
-1. **Get API Key**: Visit [Anthropic Console](https://console.anthropic.com/)
-2. **Configure in App**: Click the API setup prompt when first loading
-3. **Enable Features**: Enhanced descriptions, market insights, smart filtering
+### Frontend Only (Demo Mode)
+```bash
+# Just run the frontend with demo data
+npm install
+npm run dev
+```
+
+### DeepSearchAgent Setup
+1. **Get API Keys**: [Anthropic](https://console.anthropic.com/) + [Serper](https://serper.dev)
+2. **Configure Backend**: See [DEEPSEARCH_SETUP.md](DEEPSEARCH_SETUP.md) for detailed instructions
+3. **Real Search Mode**: Backend provides live apartment searches with verified URLs
 
 ## 📁 Project Structure
 
